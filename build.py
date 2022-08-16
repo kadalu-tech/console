@@ -62,16 +62,15 @@ def crawl(path):
 
 def build(args):
     """Build Static Website from Templates"""
-    from jinja2 import Template
+    from jinja2 import Environment, FileSystemLoader
 
     paths = crawl(args.templates_dir)
     for path in paths:
         target_dir = os.path.dirname(path).replace(
             args.templates_dir, args.output_dir
         )
-        content = ""
-        with open(path) as template_file:
-            content = template_file.read()
+        env = Environment(loader=FileSystemLoader("templates"))
+        template_file = path.replace(f"{args.templates_dir}/", "")
         bname = os.path.basename(path).replace(".html.j2", "")
         if bname != "index":
             target_dir = os.path.join(target_dir, bname)
@@ -79,7 +78,7 @@ def build(args):
         os.makedirs(target_dir, exist_ok=True)
         target_file = os.path.join(target_dir, "index.html")
         with open(target_file, "w") as tfile:
-            tfile.write(Template(content).render())
+            tfile.write(env.get_template(template_file).render())
         print(f"{path} => {target_file}")
 
 

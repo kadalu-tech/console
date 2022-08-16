@@ -3,7 +3,25 @@
 {% block page_title %}Pools List{% endblock %}
 {% block body %}
     <div x-data="data" x-init="getPools">
-        <div x-text="pools.length"></div>
+        <nav class="breadcrumb" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="#">Mgrs</a></li>
+                <li><a href="#" x-text="mgr_url"></a></li>
+                <li class="is-active"><a href="#" aria-current="page">Pools</a></li>
+            </ul>
+        </nav>
+        <table class="table">
+            <tr>
+                <th>Name</th>
+                <th>ID</th>
+            </tr>
+            <template x-for="pool in pools">
+                <tr>
+                    <td x-text="pool.name"></td>
+                    <td x-text="pool.id"></td>
+                </tr>
+            </template>
+        </table>
     </div>
     <script>
      var qparams = new URLSearchParams(window.location.search);
@@ -17,8 +35,8 @@
                        {
                            /* TODO: Get Authorization and user id from cookie */
                            headers: {
-                               "Authorization": "Bearer ",
-                               "X-User-ID": ""
+                               "Authorization": "Bearer 1e3f244d643480095e205ee78bf21d393ba6e77d3f3b887cadd24554af821efe",
+                               "X-User-ID": "405e6c01-6b83-401b-9c9a-949e079dc99d"
                            }
                        }
                  )

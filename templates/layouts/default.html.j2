@@ -9,6 +9,13 @@
     <script defer src="/static/js/alpinejs@3.10.2.js"></script>
   </head>
   <body>
-      {% block body %}{% endblock %}
+      <div class="columns">
+          <div class="column is-3">
+              Side Menu
+          </div>
+          <div class="column is-9">
+              {% block body %}{% endblock %}
+          </div>
+      </div>
   </body>
 </html>

@@ -1,0 +1,31 @@
+{% extends "layouts/default.html.j2" %}
+
+{% block page_title %}Pools List{% endblock %}
+{% block body %}
+    <div x-data="data" x-init="getPools">
+        <div x-text="pools.length"></div>
+    </div>
+    <script>
+     var qparams = new URLSearchParams(window.location.search);
+     document.addEventListener('alpine:init', () => {
+         Alpine.data('data', () => ({
+             link_name: "pools",
+             mgr_url: qparams.get("mgr"),
+             pools: [],
+             getPools() {
+                 fetch(this.mgr_url + '/api/v1/pools',
+                       {
+                           /* TODO: Get Authorization and user id from cookie */
+                           headers: {
+                               "Authorization": "Bearer ",
+                               "X-User-ID": ""
+                           }
+                       }
+                 )
+                     .then((response) => response.json())
+                     .then((json) => this.pools = json);
+             }
+         }))
+     })
+    </script>
+{% endblock %}

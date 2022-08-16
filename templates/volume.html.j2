@@ -1,0 +1,20 @@
+{% extends "layouts/default.html.j2" %}
+
+{% block page_title %}Volume Detail{% endblock %}
+{% block body %}
+    <div x-data="data">
+        <p>Pool: <span x-text="pool_name"></span></p>
+        <p>Volume: <span x-text="volume_name"></span></p>
+    </div>
+    <script>
+     var qparams = new URLSearchParams(window.location.search);
+     document.addEventListener('alpine:init', () => {
+         Alpine.data('data', () => ({
+             link_name: "volume",
+             pool_name: qparams.get("pool"),
+             volume_name: qparams.get("volume"),
+             mgr_name: qparams.get("mgr")
+         }))
+     })
+    </script>
+{% endblock %}

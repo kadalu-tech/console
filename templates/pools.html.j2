@@ -5,18 +5,21 @@
     <div x-data="data" x-init="getPools">
         <nav class="breadcrumb" aria-label="breadcrumbs">
             <ul>
-                <li><a href="#">Mgrs</a></li>
-                <li><a href="#" x-text="mgr_url"></a></li>
+                <li><a href="/">{% include "partials/icon_home.svg" %}</a></li>
+                <li><a :href="'/dashboard?mgr=' + mgr_url" x-text="mgr_url"></a></li>
                 <li class="is-active"><a href="#" aria-current="page">Pools</a></li>
             </ul>
         </nav>
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon is-primary" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+        </svg>
         <table class="table">
             <tr>
                 <th>Name</th>
                 <th>ID</th>
             </tr>
             <template x-for="pool in pools">
-                <tr>
+                <tr @click="location.href=poolUrl(pool)">
                     <td x-text="pool.name"></td>
                     <td x-text="pool.id"></td>
                 </tr>
@@ -25,18 +28,24 @@
     </div>
     <script>
      var qparams = new URLSearchParams(window.location.search);
+     handleRedirectToLogin(qparams.get("mgr"));
+
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
              link_name: "pools",
              mgr_url: qparams.get("mgr"),
              pools: [],
+             poolUrl(pool) {
+                 return '/pool?mgr=' + this.mgr_url + '&pool=' + pool.name;
+             },
              getPools() {
+                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
+                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
                  fetch(this.mgr_url + '/api/v1/pools',
                        {
-                           /* TODO: Get Authorization and user id from cookie */
                            headers: {
-                               "Authorization": "Bearer 1e3f244d643480095e205ee78bf21d393ba6e77d3f3b887cadd24554af821efe",
-                               "X-User-ID": "405e6c01-6b83-401b-9c9a-949e079dc99d"
+                               "Authorization": `Bearer ${auth}`,
+                               "X-User-ID": user_id
                            }
                        }
                  )

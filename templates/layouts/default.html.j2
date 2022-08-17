@@ -6,14 +6,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block page_title %}{% endblock %} - Kadalu Storage Manager</title>
     <link rel="stylesheet" href="/static/css/stylesheet.css">
+    <script src="/static/js/app.js"></script>
     <script defer src="/static/js/alpinejs@3.10.2.js"></script>
   </head>
   <body>
       <div class="columns">
-          <div class="column is-3">
-              Side Menu
+          <div class="column is-2 has-background-primary has-text-white-ter" style="height:100vh">
+              <div class="p-5">
+                  <img src="/static/logo.png"/>
+                  Side Menu
+              </div>
           </div>
-          <div class="column is-9">
+          <div class="column is-10">
+              <nav class="container px-2 py-1 has-text-right">
+                  <div class="dropdown is-hoverable is-right">
+                      <div class="dropdown-trigger">
+                          <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
+                              <span>Admin</span>
+                              <span class="icon is-small">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                  </svg>
+                              </span>
+                          </button>
+                      </div>
+                      <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                          <div class="dropdown-content">
+                              <a href="#" class="dropdown-item">
+                                  Logout
+                              </a>
+                          </div>
+                      </div>
+                  </div>
+              </nav>
               {% block body %}{% endblock %}
           </div>
       </div>

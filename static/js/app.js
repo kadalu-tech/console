@@ -1,6 +1,6 @@
 function setCookie(name, value) {
     var secure = `${window.location}`.indexOf("https://") === 0 ? ";secure" : "";
-    document.cookie = `${name}=${value}; SameSite=Strict ${secure}`;
+    document.cookie = `${name}=${value}; path=/; domain=${window.location.hostname}; SameSite=Strict ${secure}`;
 }
 
 function listCookies() {

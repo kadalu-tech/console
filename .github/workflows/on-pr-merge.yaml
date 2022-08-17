@@ -19,7 +19,7 @@ jobs:
         python-version: '3.8'
     - name: Install Build deps
       run: |
-        sudo pip install jinja2
+        pip install jinja2
     - name: Build Site
       run: |
         make build

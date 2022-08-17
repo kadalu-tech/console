@@ -1,0 +1,30 @@
+name: After merging PR
+
+on:
+  push:
+    branches:
+      - main
+      - build_test
+
+  # Allow to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  devel-tag-push:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+    - name: Install Build deps
+      run: |
+        sudo pip install jinja2
+    - name: Build Site
+      run: |
+        make build
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./output

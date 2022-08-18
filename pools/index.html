@@ -55,11 +55,13 @@
         </svg>
         <table class="table">
             <tr>
+                <th></th>
                 <th>Name</th>
                 <th>ID</th>
             </tr>
             <template x-for="pool in pools">
                 <tr @click="location.href=poolUrl(pool)">
+                    <td x-html="uuidThumbmail(pool.id)"></td>
                     <td x-text="pool.name"></td>
                     <td x-text="pool.id"></td>
                 </tr>

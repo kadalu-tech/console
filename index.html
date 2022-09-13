@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Home - Kadalu Storage Manager</title>
+    <title>List of Storage Manager instances - Kadalu Storage Manager</title>
     <link rel="stylesheet" href="/static/css/stylesheet.css">
     <script src="/static/js/app.js"></script>
     <script defer src="/static/js/alpinejs@3.10.2.js"></script>
@@ -40,7 +40,212 @@
                   </div>
               </nav>
               
-Home
+    <div x-data="data" x-init="getStorageManagers">
+        <button class="button is-primary is-clickable mb-6"
+                title="Add a new Storage Manager or Operator instance"
+                @click="show_add_storage_manager = true"
+                x-show="show_add_button">
+            <span class="icon is-small">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                </svg>
+            </span>
+            <span>Add</span>
+        </button>
+        <article class="message is-success" x-show="message != ''">
+            <div class="message-body" x-text="message"></div>
+        </article>
+        <div x-show="storage_managers.length == 0 || show_add_storage_manager" class="mr-5 mb-6">
+            <article class="message is-info">
+                <div class="message-body">
+                    <h3 class="has-text-weight-semibold">Add a new Storage Manager or Operator instance.</h3>
+                    All instances details are saved in local storage of your browser. The Manager/Operator URL added here are not available in other browser instances. API calls to get Storage Pools and Volumes information are initiated from the browser and no information is shared with us.
+                </div>
+            </article>
+
+            <article class="message is-danger" x-show="error != ''">
+                <div class="message-body" x-text="error"></div>
+            </article>
+            <form @submit.prevent="addInstance">
+                <div class="field">
+                <label class="label">Type</label>
+                <div class="control">
+                    <div class="select">
+                        <select x-model="sm_type">
+                            <option value="Storage Manager">Storage Manager</option>
+                            <option value="Storage Operator">Storage Operator</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">Name</label>
+                <div class="control">
+                    <input class="input" x-model="sm_name" type="text" placeholder="Dev">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">URL</label>
+                <div class="control">
+                    <input class="input" x-model="sm_url" type="text" placeholder="http://localhost:3000">
+                </div>
+            </div>
+
+            <div class="field is-grouped">
+                <div class="control">
+                    <input type="submit" class="button is-link" value="Add"/>
+                </div>
+                <div class="control">
+                    <button class="button is-link is-light" @click="show_add_storage_manager = false">Cancel</button>
+                </div>
+            </div>
+            </form>
+        </div>
+        <table class="table" x-show="storage_managers.length > 0">
+            <tr>
+                <th></th>
+                <th>Type</th>
+                <th>Name</th>
+                <th>URL</th>
+                <th></th>
+            </tr>
+            <template x-for="sm in storage_managers">
+                <tr class="is-clickable">
+                    <td>
+                        <svg xmlns="http://www.w3.org/2000/svg" x-show="sm.reachable" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon has-text-success">
+                            <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm.53 5.47a.75.75 0 00-1.06 0l-3 3a.75.75 0 101.06 1.06l1.72-1.72v5.69a.75.75 0 001.5 0v-5.69l1.72 1.72a.75.75 0 101.06-1.06l-3-3z" clip-rule="evenodd" />
+                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" x-show="!sm.reachable" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon has-text-danger">
+                            <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-.53 14.03a.75.75 0 001.06 0l3-3a.75.75 0 10-1.06-1.06l-1.72 1.72V8.25a.75.75 0 00-1.5 0v5.69l-1.72-1.72a.75.75 0 00-1.06 1.06l3 3z" clip-rule="evenodd" />
+                        </svg>
+                    </td>
+                    <td x-text="sm.type" @click="location.href=storageManagerUrl(sm)"></td>
+                    <td x-text="sm.name" @click="location.href=storageManagerUrl(sm)"></td>
+                    <td x-text="sm.url" @click="location.href=storageManagerUrl(sm)"></td>
+                    <td><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="has-text-danger w-6 h-6 icon is-small is-clickable" @click="deleteInstance(sm.name)">
+                        <path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z" clip-rule="evenodd" />
+                    </svg>
+                    </td>
+                </tr>
+            </template>
+        </table>
+    </div>
+    <script>
+     var qparams = new URLSearchParams(window.location.search);
+
+     document.addEventListener('alpine:init', () => {
+         Alpine.data('data', () => ({
+             link_name: "storage_managers",
+             show_add_storage_manager: false,
+             show_add_button: true,
+             sm_name: "",
+             sm_type: "Storage Manager",
+             sm_url: "",
+             error: "",
+             message: "",
+             storage_managers: [],
+             storageManagerUrl(sm) {
+                 return '/pools?mgr=' + sm.url;
+             },
+             storageManagerStatus(idx) {
+                 fetch(this.storage_managers[idx].url + '/ping')
+                     .then((response) => {
+                         if (response.status === 200) {
+                             this.storage_managers[idx].reachable = true;
+                         } else {
+                             this.storage_managers[idx].reachable = false;
+                         }
+                     });
+             },
+             getStorageManagers() {
+                 var instances = window.localStorage.getItem("storage_managers");
+                 if (!instances) {
+                     this.storage_managers = [];
+                     this.show_add_button = false;
+                     return;
+                 }
+
+                 this.storage_managers = JSON.parse(instances);
+                 for (var i=0; i<this.storage_managers.length; i++) {
+                     this.storageManagerStatus(i);
+                 }
+                 if (this.storage_managers.length === 0) {
+                     this.show_add_button = false;
+                 }
+             },
+             addInstance() {
+                 var obj = this;
+                 if (obj.sm_name == "") {
+                     obj.error = "Invalid instance name";
+                     return
+                 }
+                 if (obj.sm_url == "") {
+                     obj.error = "Invalid instance URL";
+                     return
+                 }
+                 try {
+                     var url = new URL(obj.sm_url);
+                     obj.sm_url = url.protocol + "//" + url.host;
+                 } catch (error) {
+                     obj.error = "Invalid instance URL";
+                     return;
+                 }
+
+                 if (obj.sm_type == "") {
+                     obj.error = "Invalid instance type";
+                     return
+                 }
+
+                 for (var i=0; i<obj.storage_managers.length; i++) {
+                     if (obj.storage_managers[i].name.toLowerCase() === obj.sm_name.toLowerCase()) {
+                         obj.error = "Storage Manager/Operator Name already exists"
+                         return
+                     }
+                     if (obj.storage_managers[i].url.toLowerCase() === obj.sm_url.toLowerCase()) {
+                         obj.error = "Storage Manager/Operator URL already exists"
+                         return
+                     }
+                 }
+                 obj.error = "";
+                 var instances = window.localStorage.getItem("storage_managers");
+                 if (!instances) instances = "[]";
+                 var data = JSON.parse(instances);
+                 data.unshift({
+                     name: obj.sm_name,
+                     url: obj.sm_url,
+                     type: obj.sm_type
+                 });
+                 window.localStorage.setItem("storage_managers", JSON.stringify(data));
+                 obj.storage_managers = data;
+                 obj.sm_name = "";
+                 obj.sm_url = "";
+                 obj.show_add_storage_manager = false;
+                 obj.message = obj.sm_type + " added successfully!";
+                 obj.show_add_button = true;
+                 setTimeout(function() {
+                     obj.message = "";
+                 }, 5000);
+             },
+             deleteInstance(sm_name) {
+                 if (!confirm(`Are you sure want to delete ${sm_name}?`)) {
+                     return;
+                 }
+                 var instances = window.localStorage.getItem("storage_managers");
+                 if (!instances) return;
+
+                 this.storage_managers = JSON.parse(instances).filter(function(value, index, arr){
+                     return value.name != sm_name;
+                 });
+                 window.localStorage.setItem("storage_managers", JSON.stringify(this.storage_managers));
+                 if (this.storage_managers.length === 0) {
+                     this.show_add_button = false;
+                 }
+             }
+         }))
+     })
+    </script>
 
           </div>
       </div>

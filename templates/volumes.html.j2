@@ -3,7 +3,7 @@
 {% block page_title %}Volumes List{% endblock %}
 {% block body %}
     <div x-data="data" x-init="getVolumes">
-        <nav class="breadcrumb" aria-label="breadcrumbs">
+        <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
             <ul>
                 <li><a href="/">{% include "partials/icon_home.svg" %}</a></li>
                 <li><a :href="'/pools?mgr=' + mgr_url">Pools</a></li>
@@ -38,7 +38,7 @@
             </div>
                 </nav>
 
-                <button class="button is-primary is-clickable mt-6"
+                <button class="button is-primary is-clickable mb-4 mt-6"
                         title="Create a Volume"
                         @click="show_create_volume = true"
                         x-show="show_add_button">

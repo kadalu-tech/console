@@ -1,92 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block page_title %}{% endblock %} - Kadalu Storage Manager</title>
-    <link rel="stylesheet" href="/static/css/stylesheet.css">
-    <script src="/static/js/app.js"></script>
-    <script defer src="/static/js/alpinejs@3.10.2.js"></script>
-  </head>
-  <body>
-      <div x-data="data" class="hero is-fullheight is-primary">
-          <div class="hero-body">
-              <div class="container">
-                  <div class="column is-6-desktop is-8-mobile is-offset-3-desktop is-offset-2-mobile">
-                      <div class="box">
-                          <p class="has-text-centered">Login to Kadalu Storage Manager.</p>
-                          <p class="has-text-centered"><span class="tag is-warning" x-text="mgr_url"></span></p>
-                          <div class="field">
-                              <label class="label">Username</label>
-                              <div class="control">
-                                  <input class="input" type="text" x-model="username" placeholder="Username">
-                              </div>
-                          </div>
-                          <div class="field">
-                              <label class="label">Password</label>
-                              <div class="control">
-                                  <input class="input" type="password" x-model="password" placeholder="Password">
-                              </div>
-                          </div>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{% block page_title %}{% endblock %} - Kadalu Storage Manager</title>
+        <link rel="stylesheet" href="/static/css/stylesheet.css">
+        <script src="/static/js/app.js"></script>
+        <script defer src="/static/js/alpinejs@3.10.2.js"></script>
+    </head>
+    <body>
+        <div x-data="data" class="hero is-fullheight is-primary">
+            <div class="hero-body">
+                <div class="container">
+                    <div class="column is-6-desktop is-8-mobile is-offset-3-desktop is-offset-2-mobile">
+                        <div class="box">
+                            <article class="message is-danger" x-show="error != ''">
+                                <div class="message-body" x-text="error"></div>
+                            </article>
+                            <p class="has-text-centered">Login to Kadalu Storage Manager.</p>
+                            <p class="has-text-centered"><span class="tag is-warning" x-text="mgr_url"></span></p>
+                            <form @submit.prevent="onLogin">
+                                <div class="field">
+                                    <label class="label">Username</label>
+                                    <div class="control">
+                                        <input class="input" type="text" x-model="username" placeholder="Username">
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label">Password</label>
+                                    <div class="control">
+                                        <input class="input" type="password" x-model="password" placeholder="Password">
+                                    </div>
+                                </div>
 
-                          <div class="field has-text-centered">
-                              <div class="control">
-                                  <button class="button is-primary" @click="onLogin">Login</button>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-      <script>
-       var qparams = new URLSearchParams(window.location.search);
-       /* 
-          - Check if Token exists for the given mgr URL
-          - If exists, redirect to dashboard
-          - If not exists, stay in login page
-          - Call Login API on Submit, if valid save the tokens in Cookie
-        */
-       /* If Manager URL is not set */
-       if (!qparams.get("mgr")) {
-           location.href = "/";
-       }
+                                <div class="field has-text-centered">
+                                    <div class="control">
+                                        <input type="submit" class="button is-primary" value="Login"/>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+         var qparams = new URLSearchParams(window.location.search);
+         /* 
+            - Check if Token exists for the given mgr URL
+            - If exists, redirect to dashboard
+            - If not exists, stay in login page
+            - Call Login API on Submit, if valid save the tokens in Cookie
+          */
+         /* If Manager URL is not set */
+         if (!qparams.get("mgr")) {
+             location.href = "/";
+         }
 
-       /* Redirect to dashboard if already logged in */
-       var mgrApiCookieName = encodeURIComponent(qparams.get("mgr"));
-       var mgrApiToken = getCookieValue(`${mgrApiCookieName}-token`);
-       if (mgrApiToken) {
-           location.href = `/dashboard?mgr=${qparams.get("mgr")}`;
-       }
+         /* Redirect to dashboard if already logged in */
+         var mgrApiCookieName = encodeURIComponent(qparams.get("mgr"));
+         var mgrApiToken = getCookieValue(`${mgrApiCookieName}-token`);
+         if (mgrApiToken) {
+             location.href = `/pools?mgr=${qparams.get("mgr")}`;
+         }
 
-       document.addEventListener('alpine:init', () => {
-           Alpine.data('data', () => ({
-               link_name: "login",
-               username: "",
-               password: "",
-               mgr_url: qparams.get("mgr"),
-               onLogin() {
-                   fetch(`${this.mgr_url}/api/v1/users/${this.username}/api-keys`,
-                         {
-                             method: "POST",
-                             headers: {
-                                 'Content-Type': 'application/json'
-                             },
-                             body: JSON.stringify({password: this.password})
-                         }
-                   )
-                       .then((response) => response.json())
-                       .then((json) => {
-                           setCookie(`${mgrApiCookieName}-token`, json.token);
-                           setCookie(`${mgrApiCookieName}-userid`, json.user_id);
-                           location.href = `/dashboard?mgr=${qparams.get("mgr")}`;
-                       }).catch((error) => {
-                           console.error("Error: ", error);
-                       });
-               }
-           }))
-       })
-      </script>
-  </body>
+         document.addEventListener('alpine:init', () => {
+             Alpine.data('data', () => ({
+                 link_name: "login",
+                 username: "",
+                 password: "",
+                 mgr_url: qparams.get("mgr"),
+                 error: "",
+                 onLogin() {
+                     if (this.username.trim() == "") {
+                         this.error = "Username is empty";
+                         return
+                     }
+
+                     if (this.password.trim() == "") {
+                         this.error = "Password is empty";
+                         return
+                     }
+                     fetch(`${this.mgr_url}/api/v1/users/${this.username}/api-keys`,
+                           {
+                               method: "POST",
+                               headers: {
+                                   'Content-Type': 'application/json'
+                               },
+                               body: JSON.stringify({password: this.password})
+                           }
+                     )
+                         .then((response) => response.json())
+                         .then((json) => {
+                             if (json.error) {
+                                 this.error = json.error;
+                             } else {
+                                 setCookie(`${mgrApiCookieName}-token`, json.token);
+                                 setCookie(`${mgrApiCookieName}-userid`, json.user_id);
+                                 location.href = `/pools?mgr=${qparams.get("mgr")}`;
+                             }
+                         }).catch((error) => {
+                             this.error = error;
+                         });
+                 }
+             }))
+         })
+        </script>
+    </body>
 </html>

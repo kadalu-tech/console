@@ -36,13 +36,23 @@ function handleRedirectToLogin(mgr_url) {
     }
 }
 
+function resetCookiesAndRedirectToLogin(mgr_url) {
+    var mgrApiCookieName = encodeURIComponent(mgr_url);
+    setCookie(`${mgrApiCookieName}-token`, "");
+    setCookie(`${mgrApiCookieName}-userid`, "");
+    handleRedirectToLogin(mgr_url)
+}
+
 // Return a SVG with the 16 colored rectangles grid
 // Split UUID string as hex color codes. 1 UUID gives 5 hex colors and
 // two extra chars. So Join same UUID 3 times to get 16 hex colors.
 function uuidThumbmail(str) {
+    if (!str) {
+        return;
+    }
     var uuidStr = str.replace(/-/g, "");
     uuidStr = `${uuidStr}${uuidStr}${uuidStr}`;
-    var outstr = '<svg width="400" height="400" class="icon is-small" viewBox="0 0 400 400">';
+    var outstr = '<svg width="400" height="400" class="icon" viewBox="0 0 400 400">';
     for (var row_idx=0; row_idx<4; row_idx++) {
         for (var col_idx = 0; col_idx < 4; col_idx++) {
             var x = col_idx * 100;
@@ -54,4 +64,125 @@ function uuidThumbmail(str) {
         }
     }
     return outstr + '</svg>';
+}
+
+function humanize(value, bytes=false) {
+    const base = bytes ? 1024 : 1000;
+    const decimal_places = 1;
+
+    if (Math.abs(value) < base) {
+        return bytes ? `${value} B` : `${value}`;
+    }
+
+    const units = bytes
+          ? ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+          : ['k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
+
+    let u = -1;
+    const r = 10**decimal_places;
+
+    do {
+        value /= base;
+        ++u;
+    } while (Math.round(Math.abs(value) * r) / r >= base && u < units.length - 1);
+
+
+    return value.toFixed(decimal_places) + ' ' + units[u];
+}
+
+function volumeStateHtml(volume) {
+    if (volume.state != "Started") {
+        return `<span class="has-text-gray">${volume.state}</span>`;
+    }
+
+    if (volume.metrics.health === "Up") {
+        return `<span class="has-text-success">${volume.state}, ${volume.metrics.health}</span>`;
+    }
+
+    return `<span class="has-text-danger">${volume.state}, ${volume.metrics.health}</span>`;
+}
+
+function storageUnitStateHtml(storage_unit) {
+    if (storage_unit.metrics.health === "Up") {
+        return `<span class="has-text-success">${storage_unit.metrics.health}</span>`;
+    }
+
+    return `<span class="has-text-danger">${storage_unit.metrics.health}</span>`;
+}
+
+function volumeType(volume) {
+    var pfx = volume.distribute_groups.length > 1 ? "Distributed " : "";
+    if(volume.distribute_groups[0].replica_count > 0) {
+        return pfx + (volume.distribute_groups[0].replica_keyword == "mirror" ? "Mirror" : "Replicate");
+    } else if (volume.distribute_groups[0].disperse_count > 0) {
+        return `${pfx}Disperse`;
+    }
+
+    return `${pfx}Distribute`;
+}
+
+function poolUtilization(volumes) {
+    var used = 0;
+    var total = 0;
+
+    for (var i=0; i<volumes.length; i++) {
+        used += volumes[i].metrics.size_used_bytes;
+        total += volumes[i].metrics.size_bytes;
+    }
+
+    return `${humanize(used, true)}/${humanize(total, true)}`;
+}
+
+function poolStorageUnitsCount(volumes) {
+    var total = 0;
+
+    for (var i=0; i<volumes.length; i++) {
+        for (var j=0; j<volumes[i].distribute_groups.length; j++) {
+            total += volumes[i].distribute_groups[j].storage_units.length;
+        }
+    }
+
+    return total;
+}
+
+function poolNodesCount(volumes) {
+    var nodes = [];
+
+    for (var i=0; i<volumes.length; i++) {
+        for (var j=0; j<volumes[i].distribute_groups.length; j++) {
+            for (var k=0; k<volumes[i].distribute_groups[j].storage_units.length; k++) {
+                var node_name = volumes[i].distribute_groups[j].storage_units[k].node.name;
+                if (nodes.indexOf(node_name) === -1) {
+                    nodes.push(node_name);
+                }
+            }
+        }
+    }
+
+    return nodes.length;
+}
+
+function volumeStorageUnitsCount(volume) {
+    var total = 0;
+
+    for (var j=0; j<volume.distribute_groups.length; j++) {
+        total += volume.distribute_groups[j].storage_units.length;
+    }
+
+    return total;
+}
+
+function volumeNodesCount(volume) {
+    var nodes = [];
+
+    for (var j=0; j<volume.distribute_groups.length; j++) {
+        for (var k=0; k<volume.distribute_groups[j].storage_units.length; k++) {
+            var node_name = volume.distribute_groups[j].storage_units[k].node.name;
+            if (nodes.indexOf(node_name) === -1) {
+                nodes.push(node_name);
+            }
+        }
+    }
+
+    return nodes.length;
 }

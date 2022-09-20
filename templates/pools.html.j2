@@ -6,21 +6,31 @@
         <nav class="breadcrumb" aria-label="breadcrumbs">
             <ul>
                 <li><a href="/">{% include "partials/icon_home.svg" %}</a></li>
-                <li><a :href="'/dashboard?mgr=' + mgr_url" x-text="mgr_url"></a></li>
                 <li class="is-active"><a href="#" aria-current="page">Pools</a></li>
             </ul>
         </nav>
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon is-primary" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
-        </svg>
-        <table class="table">
+
+        <div class="container has-text-right pr-2">
+        <button class="button is-primary is-clickable mb-6"
+                title="Create a Pool"
+                @click="show_create_pool = true"
+                x-show="show_create_button">
+            <span class="icon is-small">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                </svg>
+            </span>
+            <span>Create a Pool</span>
+        </button>
+        </div>
+        <table class="table is-fullwidth">
             <tr>
                 <th></th>
                 <th>Name</th>
                 <th>ID</th>
             </tr>
             <template x-for="pool in pools">
-                <tr @click="location.href=poolUrl(pool)">
+                <tr @click="location.href=poolUrl(pool)" class="is-clickable">
                     <td x-html="uuidThumbmail(pool.id)"></td>
                     <td x-text="pool.name"></td>
                     <td x-text="pool.id"></td>
@@ -37,8 +47,10 @@
              link_name: "pools",
              mgr_url: qparams.get("mgr"),
              pools: [],
+             show_create_button: true,
+             show_create_pool: true,
              poolUrl(pool) {
-                 return '/pool?mgr=' + this.mgr_url + '&pool=' + pool.name;
+                 return '/volumes?mgr=' + this.mgr_url + '&pool=' + pool.name;
              },
              getPools() {
                  var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
@@ -51,7 +63,13 @@
                            }
                        }
                  )
-                     .then((response) => response.json())
+                     .then((response) => {
+                         if (response.status == 401 || response.status == 403) {
+                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
+                         }
+                         
+                         return response.json();
+                     })
                      .then((json) => this.pools = json);
              }
          }))

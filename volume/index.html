@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Volume Detail - Kadalu Storage Manager</title>
+    <title>Volume detail - Kadalu Storage Manager</title>
     <link rel="stylesheet" href="/static/css/stylesheet.css">
     <script src="/static/js/app.js"></script>
     <script defer src="/static/js/alpinejs@3.10.2.js"></script>
@@ -14,7 +14,9 @@
           <div class="column is-2 has-background-primary has-text-white-ter" style="height:100vh">
               <div class="p-5">
                   <img src="/static/logo.png"/>
-                  Side Menu
+                  <div class="">
+                      A
+                  </div>
               </div>
           </div>
           <div class="column is-10">
@@ -40,18 +42,97 @@
                   </div>
               </nav>
               
-    <div x-data="data">
-        <p>Pool: <span x-text="pool_name"></span></p>
-        <p>Volume: <span x-text="volume_name"></span></p>
+    <div x-data="data" x-init="getVolume">
+        <nav class="breadcrumb" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="/"><svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 20 20" fill="currentColor">
+  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+</svg></a></li>
+                <li><a :href="'/pools?mgr=' + mgr_url">Pools</a></li>
+                <li><a :href="`/volumes?mgr=${mgr_url}&pool=${pool_name}`" x-text="pool_name"></a></li>
+                <li><a :href="`/volumes?mgr=${mgr_url}&pool=${pool_name}`">Volumes</a></li>
+                <li class="is-active"><a href="#" aria-current="page" x-text="volume_name"></a></li>
+            </ul>
+        </nav>
+        <nav class="level has-background-primary-light py-4">
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Nodes</p>
+                    <p class="title is-size-5" x-text="volumeNodesCount(volume)"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Storage Units</p>
+                    <p class="title is-size-5" x-text="volumeStorageUnitsCount(volume)"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Utilization</p>
+                    <p class="title is-size-5" x-text="humanize(volume.metrics.size_used_bytes, true) + '/' + humanize(volume.metrics.size_bytes, true)"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Inodes</p>
+                    <p class="title is-size-5" x-text="humanize(volume.metrics.inodes_used_count) + '/' + humanize(volume.metrics.inodes_count)"></p>
+                </div>
+            </div>
+        </nav>
+
+        <table class="table is-fullwidth mt-6">
+            <tr>
+                <th>Node</th>
+                <th>Path</th>
+                <th>State</th>
+                <th>Size</th>
+                <th>Inodes</th>
+            </tr>
+            <template x-for="dist_group in volume.distribute_groups">
+                <template x-for="storage_unit in dist_group.storage_units">
+                    <tr>
+                        <td x-text="storage_unit.node.name + ':' + storage_unit.port"></td>
+                        <td x-text="storage_unit.path"></td>
+                        <td x-html="storageUnitStateHtml(storage_unit)"></td>
+                        <td x-text="humanize(storage_unit.metrics.size_used_bytes, true) + '/' + humanize(storage_unit.metrics.size_bytes, true)"></td>
+                        <td x-text="humanize(storage_unit.metrics.inodes_used_count) + '/' + humanize(storage_unit.metrics.inodes_count)"></td>
+                    </tr>
+                </template>
+            </template>
+        </table>
     </div>
     <script>
      var qparams = new URLSearchParams(window.location.search);
+     handleRedirectToLogin(qparams.get("mgr"));
+
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
              link_name: "volume",
+             mgr_url: qparams.get("mgr"),
              pool_name: qparams.get("pool"),
              volume_name: qparams.get("volume"),
-             mgr_name: qparams.get("mgr")
+             volume: {distribute_groups: [], metrics: {}},
+             getVolume() {
+                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
+                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
+                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${this.volume_name}?state=1`,
+                       {
+                           headers: {
+                               "Authorization": `Bearer ${auth}`,
+                               "X-User-ID": user_id
+                           }
+                       }
+                 )
+                     .then((response) => {
+                         if (response.status == 401 || response.status == 403) {
+                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
+                         }
+                         
+                         return response.json();
+                     })
+                     .then((json) => this.volume = json);
+             }
          }))
      })
     </script>

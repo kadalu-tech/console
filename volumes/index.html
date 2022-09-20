@@ -14,7 +14,9 @@
           <div class="column is-2 has-background-primary has-text-white-ter" style="height:100vh">
               <div class="p-5">
                   <img src="/static/logo.png"/>
-                  Side Menu
+                  <div class="">
+                      A
+                  </div>
               </div>
           </div>
           <div class="column is-10">
@@ -40,16 +42,115 @@
                   </div>
               </nav>
               
-    <div x-data="data">
-        <p>Pool: <span x-text="pool_name"></span></p>
+    <div x-data="data" x-init="getVolumes">
+        <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="/"><svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 20 20" fill="currentColor">
+  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+</svg></a></li>
+                <li><a :href="'/pools?mgr=' + mgr_url">Pools</a></li>
+                <li><a :href="`/volumes?mgr=${mgr_url}&pool=${pool_name}`" x-text="pool_name"></a></li>
+                <li class="is-active"><a href="#" aria-current="page">Volumes</a></li>
+            </ul>
+        </nav>
+        <nav class="level has-background-primary-light py-4">
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Volumes</p>
+                    <p class="title is-size-5" x-text="volumes.length"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Nodes</p>
+                    <p class="title is-size-5" x-text="poolNodesCount(volumes)"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Storage Units</p>
+                    <p class="title is-size-5" x-text="poolStorageUnitsCount(volumes)"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Utilization</p>
+                    <p class="title is-size-5" x-text="poolUtilization(volumes)"></p>
+                </div>
+            </div>
+                </nav>
+
+                <button class="button is-primary is-clickable mb-4 mt-6"
+                        title="Create a Volume"
+                        @click="show_create_volume = true"
+                        x-show="show_add_button">
+                    <span class="icon is-small">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                    <span>Create Volume</span>
+                </button>
+        
+        <table class="table is-fullwidth">
+            <tr>
+                <th></th>
+                <th>Name</th>
+                <th>State</th>
+                <th>Type</th>
+                <th>Size</th>
+                <th>Inodes</th>
+            </tr>
+            <template x-for="volume in volumes">
+                <tr @click="location.href=volumeUrl(volume)" class="is-clickable">
+                    <td x-html="uuidThumbmail(volume.id)"></td>
+                    <td>
+                        <div x-text="volume.name"></div>
+                        <div class="is-size-7 has-text-grey" x-text="volume.id"></div>
+                    </td>
+                    <td x-html="volumeStateHtml(volume)"></td>
+                    <td x-text="volumeType(volume)"></td>
+                    <td x-text="humanize(volume.metrics.size_used_bytes, true) + '/' + humanize(volume.metrics.size_bytes, true)"></td>
+                    <td x-text="humanize(volume.metrics.inodes_used_count) + '/' + humanize(volume.metrics.inodes_count)"></td>
+                </tr>
+            </template>
+        </table>
     </div>
     <script>
      var qparams = new URLSearchParams(window.location.search);
+     handleRedirectToLogin(qparams.get("mgr"));
+
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
              link_name: "volumes",
+             mgr_url: qparams.get("mgr"),
              pool_name: qparams.get("pool"),
-             mgr_name: qparams.get("mgr")
+             volumes: [],
+             show_add_button: true,
+             show_create_volume: true,
+             volumeUrl(volume) {
+                 return `/volume?mgr=${this.mgr_url}&pool=${this.pool_name}&volume=${volume.name}`;
+             },
+             getVolumes() {
+                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
+                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
+                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes?state=1`,
+                       {
+                           headers: {
+                               "Authorization": `Bearer ${auth}`,
+                               "X-User-ID": user_id
+                           }
+                       }
+                 )
+                     .then((response) => {
+                         if (response.status == 401 || response.status == 403) {
+                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
+                         }
+                         
+                         return response.json();
+                     })
+                     .then((json) => this.volumes = json);
+             }
          }))
      })
     </script>

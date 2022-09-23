@@ -68,8 +68,20 @@
                     </td>
                     <td x-html="volumeStateHtml(volume)"></td>
                     <td x-text="volumeType(volume)"></td>
-                    <td x-text="humanize(volume.metrics.size_used_bytes, true) + '/' + humanize(volume.metrics.size_bytes, true)"></td>
-                    <td x-text="humanize(volume.metrics.inodes_used_count) + '/' + humanize(volume.metrics.inodes_count)"></td>
+                    <td style="position: relative">
+                        <div x-text="humanize(volume.metrics.size_used_bytes, true) + '/' + humanize(volume.metrics.size_bytes, true)"></div>
+                        <div class="is-size-7 has-text-grey" x-text="`${sizePercentage(volume)}%`"></div>
+                        <div class="number-bar">
+                            <div :style="{width: `${sizePercentage(volume)}%`, 'background-color': numberBarColor(sizePercentage(volume))}" class="number-bar-inner"></div>
+                        </div>
+                    </td>
+                    <td style="position: relative">
+                        <div x-text="humanize(volume.metrics.inodes_used_count) + '/' + humanize(volume.metrics.inodes_count)"></div>
+                        <div class="is-size-7 has-text-grey" x-text="`${inodesPercentage(volume)}%`"></div>
+                        <div class="number-bar">
+                            <div :style="{width: `${inodesPercentage(volume)}%`, 'background-color': numberBarColor(inodesPercentage(volume))}" class="number-bar-inner"></div>
+                        </div>
+                    </td>
                 </tr>
             </template>
         </table>
@@ -95,15 +107,15 @@
                  fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes?state=1`,
                        {
                            headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
+                 "Authorization": `Bearer ${auth}`,
+                            "X-User-ID": user_id
+                 }
+             }
                  )
                      .then((response) => {
                          if (response.status == 401 || response.status == 403) {
                              resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
+                 }
                          
                          return response.json();
                      })

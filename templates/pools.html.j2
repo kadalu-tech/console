@@ -23,20 +23,27 @@
                 <span>Create a Pool</span>
             </button>
         </div>
-        <table class="table is-fullwidth">
-            <tr>
-                <th></th>
-                <th>Name</th>
-                <th>ID</th>
-            </tr>
+
+        <div class="columns">
             <template x-for="pool in pools">
-                <tr @click="location.href=poolUrl(pool)" class="is-clickable">
-                    <td x-html="uuidThumbmail(pool.id)"></td>
-                    <td x-text="pool.name"></td>
-                    <td x-text="pool.id"></td>
-                </tr>
+                <div class="column is-4 m-2">
+                    <div class="card is-clickable is-3" @click="location.href=poolUrl(pool)">
+                    <div class="card-content">
+                        <div class="media">
+                            <div class="media-left">
+                                <figure class="image is-48x48" x-html="uuidThumbmail(pool.id)">
+                                </figure>
+                            </div>
+                            <div class="media-content">
+                                <p class="title is-4" x-text="pool.name"></p>
+                                <p class="subtitle is-7" x-text="pool.id"></p>
+                            </div>
+                        </div>
+                    </div>               
+                    </div>
+                </div>
             </template>
-        </table>
+        </div>
     </div>
     <script>
      var qparams = new URLSearchParams(window.location.search);

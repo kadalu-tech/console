@@ -1,0 +1,12 @@
+.number-bar {
+    position:absolute;
+    left: 1px;
+    top: 0;
+    height: 100%;
+    width: calc(100% - 2px);
+    background-color: #dddddd22;
+}
+.number-bar-inner {
+    height: 100%;
+    mix-blend-mode: multiply;
+}

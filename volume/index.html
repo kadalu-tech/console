@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Volume detail - Kadalu Storage Manager</title>
     <link rel="stylesheet" href="/static/css/stylesheet.css">
+    <link rel="stylesheet" href="/static/css/app.css">
     <script src="/static/js/app.js"></script>
     <script defer src="/static/js/alpinejs@3.10.2.js"></script>
   </head>
@@ -95,8 +96,20 @@
                         <td x-text="storage_unit.node.name + ':' + storage_unit.port"></td>
                         <td x-text="storage_unit.path"></td>
                         <td x-html="storageUnitStateHtml(storage_unit)"></td>
-                        <td x-text="humanize(storage_unit.metrics.size_used_bytes, true) + '/' + humanize(storage_unit.metrics.size_bytes, true)"></td>
-                        <td x-text="humanize(storage_unit.metrics.inodes_used_count) + '/' + humanize(storage_unit.metrics.inodes_count)"></td>
+                        <td style="position: relative">
+                            <div x-text="humanize(storage_unit.metrics.size_used_bytes, true) + '/' + humanize(storage_unit.metrics.size_bytes, true)"></div>
+                            <div class="is-size-7 has-text-grey" x-text="`${sizePercentage(storage_unit)}%`"></div>
+                            <div class="number-bar">
+                                <div :style="{width: `${sizePercentage(storage_unit)}%`, 'background-color': numberBarColor(sizePercentage(storage_unit))}" class="number-bar-inner"></div>
+                            </div>
+                        </td>
+                        <td style="position: relative">
+                            <div x-text="humanize(storage_unit.metrics.inodes_used_count) + '/' + humanize(storage_unit.metrics.inodes_count)"></div>
+                            <div class="is-size-7 has-text-grey" x-text="`${inodesPercentage(storage_unit)}%`"></div>
+                            <div class="number-bar">
+                                <div :style="{width: `${inodesPercentage(storage_unit)}%`, 'background-color': numberBarColor(inodesPercentage(storage_unit))}" class="number-bar-inner"></div>
+                            </div>
+                        </td>
                     </tr>
                 </template>
             </template>

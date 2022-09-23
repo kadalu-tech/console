@@ -52,7 +52,7 @@ function uuidThumbmail(str) {
     }
     var uuidStr = str.replace(/-/g, "");
     uuidStr = `${uuidStr}${uuidStr}${uuidStr}`;
-    var outstr = '<svg width="400" height="400" class="icon" viewBox="0 0 400 400">';
+    var outstr = '<svg width="400" height="400" class="icon is-medium" viewBox="0 0 400 400">';
     for (var row_idx=0; row_idx<4; row_idx++) {
         for (var col_idx = 0; col_idx < 4; col_idx++) {
             var x = col_idx * 100;
@@ -185,4 +185,23 @@ function volumeNodesCount(volume) {
     }
 
     return nodes.length;
+}
+
+function numberBarColor(p) {
+    var opacity = "55";
+    if (p >= 90) {
+        return `#cc0f35${opacity}`;
+    } else if (p >= 70) {
+        return `#F28C28${opacity}`;
+    }
+    
+    return `#bae6fd${opacity}`;
+}
+
+function sizePercentage(obj) {
+    return (obj.metrics.size_used_bytes*100/obj.metrics.size_bytes).toFixed(1);
+}
+
+function inodesPercentage(obj) {
+    return (obj.metrics.inodes_used_count*100/obj.metrics.inodes_count).toFixed(1);
 }

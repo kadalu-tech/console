@@ -3,10 +3,16 @@
 {% block page_title %}List of Storage Manager instances{% endblock %}
 {% block body %}
     <div x-data="data" x-init="getStorageManagers">
+        <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="/">{% include "partials/icon_home.svg" %}</a></li>
+                <li class="is-active"><a href="#" aria-current="page">Instances</a></li>
+            </ul>
+        </nav>
         <button class="button is-primary is-clickable mb-6"
-                title="Add a new Storage Manager instance"
-                @click="show_add_storage_manager = true"
-                x-show="show_add_button">
+                        title="Add a new Storage Manager instance"
+                        @click="show_add_storage_manager = true"
+                        x-show="show_add_button">
             <span class="icon is-small">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
@@ -53,7 +59,7 @@
                 </div>
             </form>
         </div>
-        <div class="columns m-2">
+        <div class="columns">
             <template x-for="sm in storage_managers">
                 <div class="column is-3">
                     <div class="card is-clickable m-2" @click="location.href=poolUrl(pool)">

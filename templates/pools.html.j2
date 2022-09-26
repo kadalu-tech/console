@@ -10,24 +10,22 @@
             </ul>
         </nav>
 
-        <div class="container mb-4">
-            <button class="button is-primary is-clickable"
-                    title="Create a Pool"
-                    @click="show_create_pool = true"
-                    x-show="show_create_button">
-                <span class="icon is-small">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
-                    </svg>
-                </span>
-                <span>Create a Pool</span>
-            </button>
-        </div>
+        <button class="button is-primary is-clickable mb-6"
+                title="Create a Pool"
+                @click="show_create_pool = true"
+                x-show="show_create_button">
+            <span class="icon is-small">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                </svg>
+            </span>
+            <span>Create a Pool</span>
+        </button>
 
-        <div class="columns">
+        <div class="columns is-multiline">
             <template x-for="pool in pools">
-                <div class="column is-4 m-2">
-                    <div class="card is-clickable is-3" @click="location.href=poolUrl(pool)">
+                <div class="column is-4-tablet is-3-widescreen">
+                    <div class="card is-clickable" @click="location.href=poolUrl(pool)">
                     <div class="card-content">
                         <div class="media">
                             <div class="media-left">

@@ -1,10 +1,15 @@
-.number-bar {
+.number-bar, .number-bar-in-header {
     position:absolute;
     left: 1px;
     top: 0;
     height: 100%;
     width: calc(100% - 2px);
+}
+.number-bar {
     background-color: #dddddd22;
+}
+.number-bar-in-header {
+    background-color: #35353721;
 }
 .number-bar-inner {
     height: 100%;

@@ -33,12 +33,18 @@
             <div class="level-item has-text-centered">
                 <div>
                     <p class="heading">Utilization</p>
-                    <p class="title is-size-5" x-text="poolUtilization(volumes)"></p>
+                    <div class="title is-size-5" style="position: relative">
+                        <div class="px-2" x-text="poolUtilization(volumes)"></div>
+                        <div class="px-2 is-size-7 has-text-grey" x-text="`${poolSizePercentage(volumes)}%`"></div>
+                        <div class="number-bar-in-header">
+                            <div :style="{width: `${poolSizePercentage(volumes)}%`, 'background-color': numberBarColor(poolSizePercentage(volumes))}" class="number-bar-inner"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
 
-        <button class="button is-primary is-clickable mb-4 mt-6"
+        <button class="button is-primary is-clickable mb-6"
                 title="Create a Volume"
                 @click="show_create_volume = true"
                 x-show="show_add_button">
@@ -50,9 +56,9 @@
             <span>Create Volume</span>
         </button>
 
-        <div class="columns">
+        <div class="columns is-multiline">
             <template x-for="(volume, idx) in volumes">
-                <div class="column is-4 m-2">
+                <div class="column is-4-tablet is-3-widescreen">
                     <div class="card is-3">
                         <div class="has-text-right" x-data="{dropdown_showing: false}">
                             <div class="dropdown is-right" :class="dropdown_showing ? 'is-active' : ''">
@@ -65,14 +71,12 @@
                                 </div>
                                 <div class="dropdown-menu has-text-left" role="menu">
                                     <div class="dropdown-content">
-                                        <a class="dropdown-item">
-                                            <span x-html="volumeStartButton(volume)"></span>
+                                        <a class="dropdown-item" @click="dropdown_showing=false;startVolume(idx)" x-html="volumeStartButton(volume, idx)"></a>
+                                        <a class="dropdown-item" @click="dropdown_showing=false; stopVolume(idx)">
+                                            <span x-html="volumeStopButton(volume, idx)"></span>
                                         </a>
-                                        <a class="dropdown-item">
-                                            <span x-html="volumeStopButton(volume)"></span>
-                                        </a>
-                                        <a class="dropdown-item">
-                                            <span x-html="volumeDeleteButton(volume)"></span>
+                                        <a class="dropdown-item" @click="dropdown_showing=false;deleteVolume(idx)">
+                                            <span x-html="volumeDeleteButton(volume, idx)"></span>
                                         </a>
                                     </div>
                                 </div>
@@ -112,17 +116,6 @@
                                 <p class="subtitle is-6">Inodes</p>
                             </div>
                         </div>
-                        <footer class="card-footer" style="opacity: 50%;">
-                            <!-- <p class="card-footer-item">
-                                 <span x-html="volumeStartButton(volume)"></span>
-                                 </p>
-                                 <p class="card-footer-item">
-                                 <span x-html="volumeStopButton(volume)"></span>
-                                 </p>
-                                 <p class="card-footer-item">
-                                 <span x-html="volumeDeleteButton(volume)"></span>
-                                 </p>         -->
-                        </footer>
                     </div>
                 </div>
             </template>
@@ -142,6 +135,100 @@
              show_create_volume: true,
              volumeUrl(volume) {
                  return `/volume?mgr=${this.mgr_url}&pool=${this.pool_name}&volume=${volume.name}`;
+             },
+             startVolume(idx) {
+                 var volume = this.volumes[idx];
+                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
+                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
+                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${volume.name}/start`,
+                       {
+                           method: "POST",
+                           headers: {
+                               "Authorization": `Bearer ${auth}`,
+                               "X-User-ID": user_id
+                           }
+                       }
+                 )
+                     .then((response) => {
+                         if (response.status == 401 || response.status == 403) {
+                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
+                         }
+                         
+                         return response.json();
+                     })
+                     .then((json) => this.refreshVolume(idx));
+             },
+             stopVolume(idx) {
+                 var volume = this.volumes[idx];
+                 if (!confirm(`Are you sure want to stop the Volume "${volume.name}"?`)) {
+                     return;
+                 }
+                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
+                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
+                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${volume.name}/stop`,
+                       {
+                           method: "POST",
+                           headers: {
+                               "Authorization": `Bearer ${auth}`,
+                               "X-User-ID": user_id
+                           }
+                       }
+                 )
+                     .then((response) => {
+                         if (response.status == 401 || response.status == 403) {
+                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
+                         }
+                         
+                         return response.json();
+                     })
+                     .then((json) => this.refreshVolume(idx));
+             },
+             deleteVolume(idx) {
+                 var volume = this.volumes[idx];
+                 if (!confirm(`Are you sure want to delete the Volume "${volume.name}"?`)) {
+                     return;
+                 }
+                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
+                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
+                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${volume.name}`,
+                       {
+                           method: "DELETE",
+                           headers: {
+                               "Authorization": `Bearer ${auth}`,
+                               "X-User-ID": user_id
+                           }
+                       }
+                 )
+                     .then((response) => {
+                         if (response.status == 401 || response.status == 403) {
+                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
+                         }
+                         
+                         this.volumes = this.volumes.filter(function(value, index, arr){
+                             return value.name != volume.name;
+                         });
+                     });
+             },
+             refreshVolume(idx) {
+                 var volume = this.volumes[idx];
+                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
+                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
+                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${volume.name}?state=1`,
+                       {
+                           headers: {
+                               "Authorization": `Bearer ${auth}`,
+                               "X-User-ID": user_id
+                           }
+                       }
+                 )
+                     .then((response) => {
+                         if (response.status == 401 || response.status == 403) {
+                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
+                         }
+                         
+                         return response.json();
+                     })
+                     .then((json) => this.volumes[idx] = json);
              },
              getVolumes() {
                  var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));

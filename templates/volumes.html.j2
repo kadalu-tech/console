@@ -36,55 +36,97 @@
                     <p class="title is-size-5" x-text="poolUtilization(volumes)"></p>
                 </div>
             </div>
-                </nav>
+        </nav>
 
-                <button class="button is-primary is-clickable mb-4 mt-6"
-                        title="Create a Volume"
-                        @click="show_create_volume = true"
-                        x-show="show_add_button">
-                    <span class="icon is-small">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
-                        </svg>
-                    </span>
-                    <span>Create Volume</span>
-                </button>
-        
-        <table class="table is-fullwidth">
-            <tr>
-                <th></th>
-                <th>Name</th>
-                <th>State</th>
-                <th>Type</th>
-                <th>Size</th>
-                <th>Inodes</th>
-            </tr>
-            <template x-for="volume in volumes">
-                <tr @click="location.href=volumeUrl(volume)" class="is-clickable">
-                    <td x-html="uuidThumbmail(volume.id)"></td>
-                    <td>
-                        <div x-text="volume.name"></div>
-                        <div class="is-size-7 has-text-grey" x-text="volume.id"></div>
-                    </td>
-                    <td x-html="volumeStateHtml(volume)"></td>
-                    <td x-text="volumeType(volume)"></td>
-                    <td style="position: relative">
-                        <div x-text="humanize(volume.metrics.size_used_bytes, true) + '/' + humanize(volume.metrics.size_bytes, true)"></div>
-                        <div class="is-size-7 has-text-grey" x-text="`${sizePercentage(volume)}%`"></div>
-                        <div class="number-bar">
-                            <div :style="{width: `${sizePercentage(volume)}%`, 'background-color': numberBarColor(sizePercentage(volume))}" class="number-bar-inner"></div>
+        <button class="button is-primary is-clickable mb-4 mt-6"
+                title="Create a Volume"
+                @click="show_create_volume = true"
+                x-show="show_add_button">
+            <span class="icon is-small">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                </svg>
+            </span>
+            <span>Create Volume</span>
+        </button>
+
+        <div class="columns">
+            <template x-for="(volume, idx) in volumes">
+                <div class="column is-4 m-2">
+                    <div class="card is-3">
+                        <div class="has-text-right" x-data="{dropdown_showing: false}">
+                            <div class="dropdown is-right" :class="dropdown_showing ? 'is-active' : ''">
+                                <div class="dropdown-trigger is-clickable">
+                                    <span class="icon mt-2 mr-2" @click="dropdown_showing=!dropdown_showing">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                                            <path fill-rule="evenodd" d="M4.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="dropdown-menu has-text-left" role="menu">
+                                    <div class="dropdown-content">
+                                        <a class="dropdown-item">
+                                            <span x-html="volumeStartButton(volume)"></span>
+                                        </a>
+                                        <a class="dropdown-item">
+                                            <span x-html="volumeStopButton(volume)"></span>
+                                        </a>
+                                        <a class="dropdown-item">
+                                            <span x-html="volumeDeleteButton(volume)"></span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </td>
-                    <td style="position: relative">
-                        <div x-text="humanize(volume.metrics.inodes_used_count) + '/' + humanize(volume.metrics.inodes_count)"></div>
-                        <div class="is-size-7 has-text-grey" x-text="`${inodesPercentage(volume)}%`"></div>
-                        <div class="number-bar">
-                            <div :style="{width: `${inodesPercentage(volume)}%`, 'background-color': numberBarColor(inodesPercentage(volume))}" class="number-bar-inner"></div>
+                        <div class="card-content is-clickable" @click="location.href=volumeUrl(volume)">
+                            <div class="media">
+                                <div class="media-left">
+                                    <figure class="image is-48x48" x-html="uuidThumbmail(volume.id)">
+                                    </figure>
+                                </div>
+                                <div class="media-content">
+                                    <p class="title is-4" x-html="volumeNameAndStatus(volume)"></p>
+                                    <p class="subtitle">
+                                        <div class="is-size-7" x-text="volume.id"></div>
+                                        <div class="is-size-7" x-text="volumeType(volume)"></div>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="content">
+                                <div style="position: relative">
+                                    <div class="px-2" x-text="humanize(volume.metrics.size_used_bytes, true) + '/' + humanize(volume.metrics.size_bytes, true)"></div>
+                                    <div class="px-2 is-size-7 has-text-grey" x-text="`${sizePercentage(volume)}%`"></div>
+                                    <div class="number-bar">
+                                        <div :style="{width: `${sizePercentage(volume)}%`, 'background-color': numberBarColor(sizePercentage(volume))}" class="number-bar-inner"></div>
+                                    </div>
+                                </div>
+                                <p class="subtitle is-6">Utilization</p>
+                                
+                                <div style="position: relative">
+                                    <div class="px-2" x-text="humanize(volume.metrics.inodes_used_count) + '/' + humanize(volume.metrics.inodes_count)"></div>
+                                    <div class="px-2 is-size-7 has-text-grey" x-text="`${inodesPercentage(volume)}%`"></div>
+                                    <div class="number-bar">
+                                        <div :style="{width: `${inodesPercentage(volume)}%`, 'background-color': numberBarColor(inodesPercentage(volume))}" class="number-bar-inner"></div>
+                                    </div>
+                                </div>
+                                <p class="subtitle is-6">Inodes</p>
+                            </div>
                         </div>
-                    </td>
-                </tr>
+                        <footer class="card-footer" style="opacity: 50%;">
+                            <!-- <p class="card-footer-item">
+                                 <span x-html="volumeStartButton(volume)"></span>
+                                 </p>
+                                 <p class="card-footer-item">
+                                 <span x-html="volumeStopButton(volume)"></span>
+                                 </p>
+                                 <p class="card-footer-item">
+                                 <span x-html="volumeDeleteButton(volume)"></span>
+                                 </p>         -->
+                        </footer>
+                    </div>
+                </div>
             </template>
-        </table>
+        </div>
     </div>
     <script>
      var qparams = new URLSearchParams(window.location.search);
@@ -107,15 +149,15 @@
                  fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes?state=1`,
                        {
                            headers: {
-                 "Authorization": `Bearer ${auth}`,
-                            "X-User-ID": user_id
-                 }
-             }
+                               "Authorization": `Bearer ${auth}`,
+                               "X-User-ID": user_id
+                           }
+                       }
                  )
                      .then((response) => {
                          if (response.status == 401 || response.status == 403) {
                              resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                 }
+                         }
                          
                          return response.json();
                      })

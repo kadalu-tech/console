@@ -1,48 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pools List - Kadalu Storage Manager</title>
-    <link rel="stylesheet" href="/static/css/stylesheet.css">
-    <link rel="stylesheet" href="/static/css/app.css">
-    <script src="/static/js/app.js"></script>
-    <script defer src="/static/js/alpinejs@3.10.2.js"></script>
-  </head>
-  <body>
-      <div class="columns">
-          <div class="column is-2 has-background-primary has-text-white-ter" style="height:100vh">
-              <div class="p-5">
-                  <img src="/static/logo.png"/>
-                  <div class="">
-                      A
-                  </div>
-              </div>
-          </div>
-          <div class="column is-10">
-              <nav class="container px-2 py-1 has-text-right">
-                  <div class="dropdown is-hoverable is-right">
-                      <div class="dropdown-trigger">
-                          <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
-                              <span>Admin</span>
-                              <span class="icon is-small">
-                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                      <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                  </svg>
-                              </span>
-                          </button>
-                      </div>
-                      <div class="dropdown-menu" id="dropdown-menu" role="menu">
-                          <div class="dropdown-content">
-                              <a href="#" class="dropdown-item">
-                                  Logout
-                              </a>
-                          </div>
-                      </div>
-                  </div>
-              </nav>
-              
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Pools List - Kadalu Storage Manager</title>
+        <link rel="stylesheet" href="/static/css/stylesheet.css">
+        <link rel="stylesheet" href="/static/css/app.css">
+        <script src="/static/js/app.js"></script>
+        <script defer src="/static/js/alpinejs@3.10.2.js"></script>
+    </head>
+    <body>
+        <nav class="level has-background-primary">
+            <div class="level-left">
+                <div class="level-item">
+                    <div class="mx-4 my-2">
+                        <img src="/static/logo.png" style="height:50px;"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr'))}">
+                <div class="level-item">
+                    <div class="dropdown is-hoverable is-right mx-4 my-2" x-show="username">
+                <div class="dropdown-trigger">
+                    <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
+                        <span x-text="username"></span>
+                        <span class="icon is-small">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                    <div class="dropdown-content">
+                        <a href="#" class="dropdown-item">
+                            Logout
+                        </a>
+                    </div>
+                </div>
+                                </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="px-4">
+            
     <div x-data="data" x-init="getPools">
         <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
             <ul>
@@ -53,24 +57,22 @@
             </ul>
         </nav>
 
-        <div class="container mb-4">
-            <button class="button is-primary is-clickable"
-                    title="Create a Pool"
-                    @click="show_create_pool = true"
-                    x-show="show_create_button">
-                <span class="icon is-small">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
-                    </svg>
-                </span>
-                <span>Create a Pool</span>
-            </button>
-        </div>
+        <button class="button is-primary is-clickable mb-6"
+                title="Create a Pool"
+                @click="show_create_pool = true"
+                x-show="show_create_button">
+            <span class="icon is-small">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                </svg>
+            </span>
+            <span>Create a Pool</span>
+        </button>
 
-        <div class="columns">
+        <div class="columns is-multiline">
             <template x-for="pool in pools">
-                <div class="column is-4 m-2">
-                    <div class="card is-clickable is-3" @click="location.href=poolUrl(pool)">
+                <div class="column is-4-tablet is-3-widescreen">
+                    <div class="card is-clickable" @click="location.href=poolUrl(pool)">
                     <div class="card-content">
                         <div class="media">
                             <div class="media-left">
@@ -126,7 +128,9 @@
      })
     </script>
 
-          </div>
-      </div>
-  </body>
+        </div>
+        <script>
+         var qparams = new URLSearchParams(window.location.search);
+        </script>
+    </body>
 </html>

@@ -111,7 +111,13 @@ function storageUnitStateHtml(storage_unit) {
 }
 
 function volumeType(volume) {
-    var pfx = volume.distribute_groups.length > 1 ? "Distributed " : "";
+    var rep_disp = volume.distribute_groups[0].replica_count + volume.distribute_groups[0].disperse_count;
+
+    var pfx = "";
+    if (volume.distribute_groups.length > 1 &&  rep_disp > 0) {
+        pfx = "Distributed ";
+    }
+
     if(volume.distribute_groups[0].replica_count > 0) {
         return pfx + (volume.distribute_groups[0].replica_keyword == "mirror" ? "Mirror" : "Replicate");
     } else if (volume.distribute_groups[0].disperse_count > 0) {
@@ -131,6 +137,18 @@ function poolUtilization(volumes) {
     }
 
     return `${humanize(used, true)}/${humanize(total, true)}`;
+}
+
+function poolSizePercentage(volumes) {
+    var used = 0;
+    var total = 0;
+
+    for (var i=0; i<volumes.length; i++) {
+        used += volumes[i].metrics.size_used_bytes;
+        total += volumes[i].metrics.size_bytes;
+    }
+
+    return (used*100/total).toFixed(1);
 }
 
 function poolStorageUnitsCount(volumes) {
@@ -195,7 +213,7 @@ function numberBarColor(p) {
         return `#F28C28${opacity}`;
     }
     
-    return `#bae6fd${opacity}`;
+    return `#c3e1f5`;
 }
 
 function sizePercentage(obj) {
@@ -204,4 +222,50 @@ function sizePercentage(obj) {
 
 function inodesPercentage(obj) {
     return (obj.metrics.inodes_used_count*100/obj.metrics.inodes_count).toFixed(1);
+}
+
+function volumeNameAndStatus(volume) {
+    if (volume.state != "Started") {
+        return `${volume.name} <span class="has-text-grey is-size-6 ml-4">${volume.state}</span>`;
+    }
+
+    if (volume.metrics.health === "Up") {
+        return `${volume.name} <span class="has-text-success is-size-6 ml-4">${volume.state}, ${volume.metrics.health}</span>`;
+    }
+
+    return `${volume.name} <span class="has-text-danger is-size-6 ml-4">${volume.state}, ${volume.metrics.health}</span>`;
+}
+
+SVG_STOP = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.5 7.5a3 3 0 013-3h9a3 3 0 013 3v9a3 3 0 01-3 3h-9a3 3 0 01-3-3v-9z" clip-rule="evenodd" /></svg>';
+SVG_PLAY = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" /></svg>';
+SVG_DELETE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z" clip-rule="evenodd" /></svg>';
+
+function volumeStartButton(volume, idx) {
+    return `<div class="is-clickable is-size-6"><i class="icon is-small has-text-success">${SVG_PLAY}</i> Start</div>`;
+}
+
+function volumeStopButton(volume, idx) {
+    if (volume.state == "Started") {
+        return `<span class="is-clickable is-size-6"><i class="icon is-small has-text-danger">${SVG_STOP}</i> Stop</span>`;
+    } else {
+        return `<span class="has-text-grey is-size-6"><i class="icon is-small">${SVG_STOP}</i> Stop</span>`;
+    }
+}
+
+function volumeDeleteButton(volume, idx) {
+    if (volume.state == "Started") {
+        return `<span class=""><i class="icon is-small has-text-grey">${SVG_DELETE}</i> Delete</span>`;
+    } else {
+        return `<span class="is-clickable"><i class="icon is-small has-text-danger">${SVG_DELETE}</i> Delete</span>`;
+    }
+}
+
+function getLoggedinUsername(mgr_url) {
+    var mgrApiCookieName = encodeURIComponent(mgr_url);
+    return getCookieValue(`${mgrApiCookieName}-user`);
+}
+
+function setLoggedinUsername(mgr_url, value) {
+    var mgrApiCookieName = encodeURIComponent(mgr_url);
+    return setCookie(`${mgrApiCookieName}-user`, value);
 }

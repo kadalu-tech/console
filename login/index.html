@@ -98,6 +98,7 @@
                              } else {
                                  setCookie(`${mgrApiCookieName}-token`, json.token);
                                  setCookie(`${mgrApiCookieName}-userid`, json.user_id);
+                                 setLoggedinUsername(qparams.get("mgr"), json.username);
                                  location.href = `/pools?mgr=${qparams.get("mgr")}`;
                              }
                          }).catch((error) => {

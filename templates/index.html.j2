@@ -48,12 +48,12 @@
                 </div>
             </form>
         </div>
-        <h1 class="is-size-5 mb-4 px-2">
+        <h1 class="is-size-5 mb-4 px-2" x-show="storage_managers.length > 0">
             List of instances
             <button class="button is-primary is-clickable ml-2 is-small"
                     title="Add a new Storage Manager instance"
                     @click="show_add_storage_manager = true"
-                    x-show="show_add_button">
+                    x-show="!show_add_storage_manager">
                 <span class="icon is-small">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
@@ -180,6 +180,7 @@
                  });
                  window.localStorage.setItem("storage_managers", JSON.stringify(data));
                  obj.storage_managers = data;
+                 obj.storageManagerStatus(0);
                  obj.sm_name = "";
                  obj.sm_url = "";
                  obj.show_add_storage_manager = false;

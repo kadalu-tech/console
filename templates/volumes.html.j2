@@ -11,7 +11,15 @@
                 <li class="is-active"><a href="#" aria-current="page">Volumes</a></li>
             </ul>
         </nav>
-        <nav class="level has-background-primary-light py-4">
+        <div x-show="volumes.length == 0">
+            <article class="message is-info">
+                <div class="message-body">
+                    <h3 class="has-text-weight-semibold">Create a new Volume.</h3>
+                    <p>No Volumes are created under this Pool.</p>
+                </div>
+            </article>
+        </div>
+        <nav class="level has-background-primary-light py-4" x-show="volumes.length > 0">
             <div class="level-item has-text-centered">
                 <div>
                     <p class="heading">Volumes</p>
@@ -44,7 +52,7 @@
             </div>
         </nav>
 
-        <h1 class="is-size-5 mb-4 px-2">
+        <h1 class="is-size-5 mb-4 px-2"  x-show="volumes.length > 0">
             List of Volumes
             <button class="button is-primary is-small is-clickable ml-2"
                     title="Create a Volume"

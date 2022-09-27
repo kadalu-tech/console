@@ -13,7 +13,7 @@
         <div x-data="data" class="hero is-fullheight is-primary">
             <div class="hero-body">
                 <div class="container">
-                    <div class="column is-6-desktop is-8-mobile is-offset-3-desktop is-offset-2-mobile">
+                    <div class="column is-6-desktop is-12-mobile is-offset-3-desktop">
                         <div class="box">
                             <article class="message is-danger" x-show="error != ''">
                                 <div class="message-body" x-text="error"></div>
@@ -98,6 +98,7 @@
                              } else {
                                  setCookie(`${mgrApiCookieName}-token`, json.token);
                                  setCookie(`${mgrApiCookieName}-userid`, json.user_id);
+                                 setCookie(`${mgrApiCookieName}-api_key_id`, json.id);
                                  setLoggedinUsername(qparams.get("mgr"), json.username);
                                  location.href = `/pools?mgr=${qparams.get("mgr")}`;
                              }

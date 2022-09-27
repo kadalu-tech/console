@@ -40,6 +40,7 @@ function resetCookiesAndRedirectToLogin(mgr_url) {
     var mgrApiCookieName = encodeURIComponent(mgr_url);
     setCookie(`${mgrApiCookieName}-token`, "");
     setCookie(`${mgrApiCookieName}-userid`, "");
+    setCookie(`${mgrApiCookieName}-api_key_id`, "");
     handleRedirectToLogin(mgr_url)
 }
 
@@ -281,4 +282,29 @@ function dropdownTrigger() {
     return `<div class="mt-2 mr-2" @click="dropdown_showing=!dropdown_showing" @click.outside="dropdown_showing=false">
                 ${SVG_ELLIPSIS}
             </div>`;
+}
+
+function logout(mgr_url) {
+    var mgrApiCookieName = encodeURIComponent(mgr_url);
+    var api_key_id = getCookieValue(getMgrCookieName(mgr_url, "-api_key_id"));
+    if (!api_key_id || api_key_id == "") {
+        resetCookiesAndRedirectToLogin(mgr_url);
+    }
+
+    var url = `${mgr_url}/api/v1/api-keys/${api_key_id}`;
+
+    var auth = getCookieValue(getMgrCookieName(mgr_url, "-token"));
+    var user_id = getCookieValue(getMgrCookieName(mgr_url, "-userid"));
+    fetch(url,
+          {
+              method: "DELETE",
+              headers: {
+                  "Authorization": `Bearer ${auth}`,
+                  "X-User-ID": user_id
+              }
+          }
+         )
+        .then((response) => {
+            resetCookiesAndRedirectToLogin(mgr_url);
+        });
 }

@@ -179,8 +179,7 @@
                      url: obj.sm_url
                  });
                  window.localStorage.setItem("storage_managers", JSON.stringify(data));
-                 obj.storage_managers = data;
-                 obj.storageManagerStatus(0);
+                 obj.getStorageManagers();
                  obj.sm_name = "";
                  obj.sm_url = "";
                  obj.show_add_storage_manager = false;
@@ -204,6 +203,7 @@
                  if (this.storage_managers.length === 0) {
                      this.show_add_button = false;
                  }
+                 this.getStorageManagers();
              }
          }))
      })

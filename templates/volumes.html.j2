@@ -11,14 +11,134 @@
                 <li class="is-active"><a href="#" aria-current="page">Volumes</a></li>
             </ul>
         </nav>
-        <div x-show="volumes.length == 0">
+        <div x-show="volumes.length == 0" class="mb-6">
             <article class="message is-info">
                 <div class="message-body">
                     <h3 class="has-text-weight-semibold">Create a new Volume.</h3>
                     <p>No Volumes are created under this Pool.</p>
                 </div>
             </article>
+
+            <form @submit.prevent="createVolume">
+                <div class="columns">
+                    <div class="column is-8">
+                        <div class="field">
+                            <label class="label">Name</label>
+                            <div class="control">
+                                <input class="input" x-model="req_volume_name" type="text"
+                                       placeholder="data">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Type</label>
+                            <div class="control">
+                                <div class="select">
+                                    <select x-model="req_type">
+                                        <option>Distribute</option>
+                                        <option>Replica 2</option>
+                                        <option>Replica 3</option>
+                                        <option>Disperse</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field" x-show="req_type == 'Disperse'">
+                            <label class="label">Data</label>
+                            <div class="select">
+                                <select x-model="req_disperse_data">
+                                    <template x-for="count in [2, 4, 5, 6, 7, 8, 9, 10]">
+                                        <option x-text="count"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field" x-show="req_type == 'Disperse'">
+                            <label class="label">Redundancy</label>
+                            <div class="select">
+                                <select x-model="req_disperse_redundancy">
+                                    <template x-for="count in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]">
+                                        <option x-text="count"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="checkbox">
+                                <input type="checkbox" x-model="req_is_common_path">
+                                Common path for Storage units
+                            </label>
+                        </div>
+                        <div class="field" x-show="req_is_common_path">
+                            <label class="label">Common Path</label>
+                            <div class="control">
+                                <input class="input" x-model="req_common_path" type="text" placeholder="">
+                            </div>
+                        </div>
+
+                        <template x-for="dist_grp in req_distribute_group_count">
+                            <div class="has-background-info-light p-2 mb-2">
+                                <p class="is-size-6">Distribute Group <span x-text="dist_grp"></span></p>
+                                <template x-for="idx in req_distribute_group_size()">
+                                    <div class="field has-addons">
+                                        <div class="control">
+                                            <div class="select">
+                                                <select :id="`storage-unit-node-${req_storageUnitId(dist_grp-1, idx)}`" @select="ts=new Date()">
+                                                    <template x-for="node in req_nodes">
+                                                        <option x-text="node"></option>
+                                                    </template>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="control">
+                                            <input class="input" :id="`storage-unit-port-${req_storageUnitId(dist_grp-1, idx)}`"
+                                                   type="text"
+                                                   @input="ts=new Date()"
+                                                   placeholder="Port: auto">
+                                        </div>
+                                        <div class="control">
+                                            <input class="input" :id="`storage-unit-path-${req_storageUnitId(dist_grp-1, idx)}`"
+                                                   type="text"
+                                                   @input="ts=new Date()"
+                                                   :class="req_is_common_path ? 'is-static' : ''"
+                                                   :placeholder="req_storageUnitPlaceholder(idx)">
+                                        </div>
+                                    </div>
+                                </template>
+                                <div class="has-text-right" x-show="dist_grp == req_distribute_group_count">
+                                    <a class="button" @click="req_distribute_group_count++">+</a>
+                                </div>
+                            </div>
+                        </template>
+
+                        <div class="">
+                            <div class="field">
+                                <label class="checkbox">
+                                    <input type="checkbox" x-model="req_no_start">
+                                    Do not start the Volume after create
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-4">
+                        <div class="container has-background-warning-light p-4" x-html="req_summary()"></div>
+                    </div>
+                </div>
+                <div class="">
+                    <div class="field is-grouped">
+                        <div class="control">
+                            <input type="submit" class="button is-link" value="Create"/>
+                        </div>
+                        <div class="control">
+                            <button class="button is-link is-light" @click="show_create_pool = false; pool_name = ''">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
+
         <nav class="level has-background-primary-light py-4" x-show="volumes.length > 0">
             <div class="level-item has-text-centered">
                 <div>
@@ -56,8 +176,8 @@
             List of Volumes
             <button class="button is-primary is-small is-clickable ml-2"
                     title="Create a Volume"
-                @click="show_create_volume = true"
-                x-show="show_add_button">
+                    @click="show_create_volume = true"
+                    x-show="show_add_button">
                 <span class="icon is-small">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
@@ -131,6 +251,149 @@
 
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
+             ts: "",
+             req_volume_name: "",
+             req_type: "Distribute",
+             req_is_common_path: false,
+             req_common_path: "",
+             req_distribute_group_count: 1,
+             req_storage_units: [],
+             req_nodes: ["server1.example.com"],
+             req_disperse_data: 2,
+             req_disperse_redundancy: 1,
+             req_no_start: false,
+             req_type_name() {
+                 var pfx = '';
+                 if (this.req_type != 'Distribute' && this.req_distribute_group_count > 1) {
+                     pfx = 'Distributed ';
+                 }
+
+                 var sfx = '';
+                 if (this.req_type == 'Disperse') {
+                     sfx = `(data: ${this.req_disperse_data}, redundancy: ${this.req_disperse_redundancy})`;
+                 }
+                 return `${pfx}${this.req_type}${sfx}`;
+             },
+             req_summary() {
+                 summary = `<p class="is-size-4">Summary</p>
+                            <p class="is-hidden">${this.ts}</p>
+                            <p class="">Name: ${this.pool_name}/${this.req_volume_name == '' ? '-' : this.req_volume_name}</p>
+                            <p class="">Type: ${this.req_type_name()}</p>
+                            <p class="">Use common path: ${this.req_is_common_path ? `Yes (${this.req_common_path})` : 'No'}</p>
+                            <p class="">Start Volume after create: ${this.req_no_start ? 'No' : 'Yes'}</p>
+                            <p class="">Number of distribute groups: ${this.req_distribute_group_count}</p>`;
+                
+                 for (var i=0; i<this.req_distribute_group_count; i++) {
+                     summary += `<p>Distribute group ${i+1}</p>`;
+                     for (var j=0; j<this.req_distribute_group_size(); j++) {
+                         var idx = i*this.req_distribute_group_size() + j + 1;
+                         var node = document.getElementById(`storage-unit-node-${idx}`).value;
+                         var port = document.getElementById(`storage-unit-port-${idx}`).value;
+                         var path = document.getElementById(`storage-unit-path-${idx}`).value;
+                         if (this.req_is_common_path) {
+                             path = this.req_common_path;
+                         }
+                         if (port != '') {
+                             port = `:${port}`;
+                         }
+                         summary += `<p class="ml-2">${node}${port}:${path}</p>`
+                     }
+                 }
+                 return summary;
+             },
+             get_replica_count() {
+                 if (this.req_type == 'Replica 2') {
+                     return 2;
+                 }
+                 if (this.req_type == 'Replica 3') {
+                     return 3;
+                 }
+                 return 0;
+             },
+             get_disperse_count() {
+                 if (this.req_type != 'Disperse') {
+                     return 0;
+                 }
+
+                 return parseInt(this.req_disperse_data, 10) + parseInt(this.req_disperse_redundancy, 10);
+             },
+             get_redundancy_count() {
+                 if (this.req_type != 'Disperse') {
+                     return 0;
+                 }
+
+                 return parseInt(this.req_disperse_redundancy, 10);
+             },
+             get_storage_unit_path(g_idx, u_idx, size) {
+                 if (this.req_is_common_path) {
+                     return this.req_common_path;
+                 }
+                 return document.getElementById(`storage-unit-path-${g_idx*size + u_idx + 1}`).value;
+             },
+             get_storage_unit_port(g_idx, u_idx, size) {
+                 var port = document.getElementById(`storage-unit-port-${g_idx*size + u_idx + 1}`).value;
+                 if (port == '') {
+                     return 0;
+                 }
+
+                 return parseInt(port, 10);
+             },
+             get_storage_unit_node(g_idx, u_idx, size) {
+                 return document.getElementById(`storage-unit-node-${g_idx*size + u_idx + 1}`).value
+             },
+             createVolume() {
+                 var req = {
+                     name: this.req_volume_name,
+                     distribute_groups: [],
+                     no_start: this.req_no_start
+                 }
+                 var dist_grp_size = this.req_distribute_group_size();
+                 for (var i=0; i<this.req_distribute_group_count; i++) {
+                     var dist_grp = {
+                         replica_count: this.get_replica_count(),
+                         disperse_count: this.get_disperse_count(),
+                         redundancy_count: this.get_redundancy_count(),
+                         storage_units: [],
+                     };
+                     for (var j=0; j<dist_grp_size; j++) {
+                         dist_grp.storage_units.push({
+                             path: this.get_storage_unit_path(i, j, dist_grp_size),
+                             port: this.get_storage_unit_port(i, j, dist_grp_size),
+                             node: {
+                                 name: this.get_storage_unit_node(i, j, dist_grp_size)
+                             }
+                         });
+                     }
+
+                     req.distribute_groups.push(dist_grp);
+                 }
+
+
+             },
+             req_disperse_count() {
+                 return parseInt(this.req_disperse_data, 10) + parseInt(this.req_disperse_redundancy, 10);
+             },
+             req_distribute_group_size() {
+                 if (this.req_type == "Replica 2") {
+                     return 2;
+                 } else if (this.req_type == "Replica 3") {
+                     return 3;
+                 } else if (this.req_type == "Disperse") {
+                     return this.req_disperse_count();
+                 }
+
+                 return 1;
+             },
+             req_storageUnitId(dist_grp_idx, storage_unit_idx) {
+                 return dist_grp_idx * this.req_distribute_group_size() + storage_unit_idx;
+             },
+             req_storageUnitPlaceholder(idx) {
+                 if (this.req_is_common_path) {
+                     return this.req_common_path;
+                 }
+
+                 return `/data/${this.req_volume_name == '' ? 'VOL' : this.req_volume_name}/s${idx}`;
+             },
              link_name: "volumes",
              mgr_url: qparams.get("mgr"),
              pool_name: qparams.get("pool"),

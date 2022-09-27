@@ -10,7 +10,37 @@
             </ul>
         </nav>
 
-        <h1 class="is-size-5 mb-4 px-2">
+        <div x-show="pools.length == 0 || show_create_pool" class="mb-6">
+            <article class="message is-info">
+                <div class="message-body">
+                    <h3 class="has-text-weight-semibold">Create a new Pool.</h3>
+                    <p x-show="pools.length == 0">No Pools are created.</p>
+                </div>
+            </article>
+
+            <article class="message is-danger" x-show="error != ''">
+                <div class="message-body" x-text="error"></div>
+            </article>
+            <form @submit.prevent="createPool">
+                <div class="field">
+                    <label class="label">Name</label>
+                    <div class="control">
+                        <input class="input" x-model="pool_name" type="text" placeholder="Dev">
+                    </div>
+                </div>
+
+                <div class="field is-grouped">
+                    <div class="control">
+                        <input type="submit" class="button is-link" value="Create"/>
+                    </div>
+                    <div class="control">
+                        <button class="button is-link is-light" @click="show_create_pool = false; pool_name = ''">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <h1 class="is-size-5 mb-4 px-2" x-show="pools.length > 0">
             List of Pools
             <button class="button is-primary is-small is-clickable ml-2"
                     title="Create a Pool"
@@ -26,10 +56,21 @@
         </h1>
 
         <div class="columns is-multiline">
-            <template x-for="pool in pools">
+            <template x-for="(pool, idx) in pools">
                 <div class="column is-4-tablet is-3-widescreen">
-                    <div class="card is-clickable" @click="location.href=poolUrl(pool)">
-                        <div class="card-content">
+                    <div class="card is-clickable">
+                        <div class="has-text-right" x-data="{dropdown_showing: false}">
+                            <div class="dropdown is-right" :class="dropdown_showing ? 'is-active' : ''">
+                                <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
+                                <div class="dropdown-menu has-text-left" role="menu">
+                                    <div class="dropdown-content">
+                                        <a class="dropdown-item" @click="deletePool(idx)" x-html="`<span class='has-text-danger'>${SVG_DELETE}</span> Delete`">
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content" @click="location.href=poolUrl(pool)">
                             <div class="media">
                                 <div class="media-left">
                                     <figure class="image is-48x48" x-html="uuidThumbmail(pool.id)">
@@ -52,11 +93,13 @@
 
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
+             error: "",
              link_name: "pools",
              mgr_url: qparams.get("mgr"),
              pools: [],
              show_create_button: true,
              show_create_pool: true,
+             pool_name: "",
              poolUrl(pool) {
                  return '/volumes?mgr=' + this.mgr_url + '&pool=' + pool.name;
              },
@@ -78,7 +121,76 @@
                          
                          return response.json();
                      })
-                     .then((json) => this.pools = json);
+                     .then((json) => {
+                         this.pools = json
+                         if (this.pools.length > 0) {
+                             this.show_create_pool = false;
+                         }
+                     });
+             },
+             createPool() {
+                 if (this.pool_name.trim() == "") {
+                     this.error = "Pool name is empty";
+                     return
+                 }
+
+                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
+                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
+                 fetch(`${this.mgr_url}/api/v1/pools`,
+                       {
+                           method: "POST",
+                           headers: {
+                               "Authorization": `Bearer ${auth}`,
+                               "X-User-ID": user_id,
+                               'Content-Type': 'application/json'
+                           },
+                           body: JSON.stringify({name: this.pool_name})
+                       }
+                 )
+                     .then((response) => response.json())
+                     .then((json) => {
+                         if (json.error) {
+                             this.error = json.error;
+                         } else {
+                             this.getPools();
+                             this.pool_name = "";
+                             this.error = "";
+                             this.show_create_pool = false;
+                             this.message = "Pool added successfully!";
+                             this.show_create_button = true;
+                             setTimeout(function() {
+                                 this.message = "";
+                             }, 5000);
+                         }
+                     }).catch((error) => {
+                         this.error = error;
+                     });
+             },
+             deletePool(idx) {
+                 var pool = this.pools[idx];
+                 if (!confirm(`Are you sure want to delete the Pool "${pool.name}"?`)) {
+                     return;
+                 }
+                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
+                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
+                 fetch(`${this.mgr_url}/api/v1/pools/${pool.name}`,
+                       {
+                           method: "DELETE",
+                           headers: {
+                               "Authorization": `Bearer ${auth}`,
+                               "X-User-ID": user_id
+                           }
+                       }
+                 )
+                     .then((response) => {
+                         if (response.status == 401 || response.status == 403) {
+                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
+                         }
+                         
+                         this.pools = this.pools.filter(function(value, index, arr){
+                             return value.name != pool.name;
+                         });
+                     });
              }
          }))
      })

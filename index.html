@@ -37,7 +37,10 @@
                         </div>
                         <div class="dropdown-menu" id="dropdown-menu" role="menu">
                             <div class="dropdown-content">
-                                <a href="#" class="dropdown-item">
+                                <a @click="logout(qparams.get('mgr'))" class="dropdown-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon is-small">
+                                        <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 006 5.25v13.5a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5V15a.75.75 0 011.5 0v3.75a3 3 0 01-3 3h-6a3 3 0 01-3-3V5.25a3 3 0 013-3h6a3 3 0 013 3V9A.75.75 0 0115 9V5.25a1.5 1.5 0 00-1.5-1.5h-6zm5.03 4.72a.75.75 0 010 1.06l-1.72 1.72h10.94a.75.75 0 010 1.5H10.81l1.72 1.72a.75.75 0 11-1.06 1.06l-3-3a.75.75 0 010-1.06l3-3a.75.75 0 011.06 0z" clip-rule="evenodd" />
+                                    </svg>
                                     Logout
                                 </a>
                             </div>
@@ -97,12 +100,12 @@
                 </div>
             </form>
         </div>
-        <h1 class="is-size-5 mb-4 px-2">
+        <h1 class="is-size-5 mb-4 px-2" x-show="storage_managers.length > 0">
             List of instances
             <button class="button is-primary is-clickable ml-2 is-small"
                     title="Add a new Storage Manager instance"
                     @click="show_add_storage_manager = true"
-                    x-show="show_add_button">
+                    x-show="!show_add_storage_manager">
                 <span class="icon is-small">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
@@ -229,6 +232,7 @@
                  });
                  window.localStorage.setItem("storage_managers", JSON.stringify(data));
                  obj.storage_managers = data;
+                 obj.storageManagerStatus(0);
                  obj.sm_name = "";
                  obj.sm_url = "";
                  obj.show_add_storage_manager = false;

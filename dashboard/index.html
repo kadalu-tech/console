@@ -15,32 +15,34 @@
             <div class="level-left">
                 <div class="level-item">
                     <div class="mx-4 my-2">
-                        <img src="/static/logo.png" style="height:50px;"/>
+                        <a href="/">
+                            <img src="/static/logo.png" style="height:50px;"/>
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr'))}">
+            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdown_show: false}">
                 <div class="level-item">
-                    <div class="dropdown is-hoverable is-right mx-4 my-2" x-show="username">
-                <div class="dropdown-trigger">
-                    <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
-                        <span x-text="username"></span>
-                        <span class="icon is-small">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </span>
-                    </button>
-                </div>
-                <div class="dropdown-menu" id="dropdown-menu" role="menu">
-                    <div class="dropdown-content">
-                        <a href="#" class="dropdown-item">
-                            Logout
-                        </a>
+                    <div class="dropdown is-right mx-4 my-2" :class="dropdown_show ? 'is-active' : ''" x-show="username">
+                        <div class="dropdown-trigger">
+                            <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu" @click="dropdown_show = !dropdown_show" @click.outside="dropdown_show = false">
+                                <span x-text="username"></span>
+                                <span class="icon is-small">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                            <div class="dropdown-content">
+                                <a href="#" class="dropdown-item">
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                                </div>
                 </div>
             </div>
         </nav>

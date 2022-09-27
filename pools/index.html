@@ -15,32 +15,34 @@
             <div class="level-left">
                 <div class="level-item">
                     <div class="mx-4 my-2">
-                        <img src="/static/logo.png" style="height:50px;"/>
+                        <a href="/">
+                            <img src="/static/logo.png" style="height:50px;"/>
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr'))}">
+            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdown_show: false}">
                 <div class="level-item">
-                    <div class="dropdown is-hoverable is-right mx-4 my-2" x-show="username">
-                <div class="dropdown-trigger">
-                    <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
-                        <span x-text="username"></span>
-                        <span class="icon is-small">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </span>
-                    </button>
-                </div>
-                <div class="dropdown-menu" id="dropdown-menu" role="menu">
-                    <div class="dropdown-content">
-                        <a href="#" class="dropdown-item">
-                            Logout
-                        </a>
+                    <div class="dropdown is-right mx-4 my-2" :class="dropdown_show ? 'is-active' : ''" x-show="username">
+                        <div class="dropdown-trigger">
+                            <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu" @click="dropdown_show = !dropdown_show" @click.outside="dropdown_show = false">
+                                <span x-text="username"></span>
+                                <span class="icon is-small">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                            <div class="dropdown-content">
+                                <a href="#" class="dropdown-item">
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                                </div>
                 </div>
             </div>
         </nav>
@@ -57,34 +59,37 @@
             </ul>
         </nav>
 
-        <button class="button is-primary is-clickable mb-6"
-                title="Create a Pool"
-                @click="show_create_pool = true"
-                x-show="show_create_button">
-            <span class="icon is-small">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
-                </svg>
-            </span>
-            <span>Create a Pool</span>
-        </button>
+        <h1 class="is-size-5 mb-4 px-2">
+            List of Pools
+            <button class="button is-primary is-small is-clickable ml-2"
+                    title="Create a Pool"
+                    @click="show_create_pool = true"
+                    x-show="show_create_button">
+                <span class="icon is-small">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                    </svg>
+                </span>
+                <span>Create</span>
+            </button>
+        </h1>
 
         <div class="columns is-multiline">
             <template x-for="pool in pools">
                 <div class="column is-4-tablet is-3-widescreen">
                     <div class="card is-clickable" @click="location.href=poolUrl(pool)">
-                    <div class="card-content">
-                        <div class="media">
-                            <div class="media-left">
-                                <figure class="image is-48x48" x-html="uuidThumbmail(pool.id)">
-                                </figure>
+                        <div class="card-content">
+                            <div class="media">
+                                <div class="media-left">
+                                    <figure class="image is-48x48" x-html="uuidThumbmail(pool.id)">
+                                    </figure>
+                                </div>
+                                <div class="media-content">
+                                    <p class="title is-4" x-text="pool.name"></p>
+                                    <p class="subtitle is-7" x-text="pool.id"></p>
+                                </div>
                             </div>
-                            <div class="media-content">
-                                <p class="title is-4" x-text="pool.name"></p>
-                                <p class="subtitle is-7" x-text="pool.id"></p>
-                            </div>
-                        </div>
-                    </div>               
+                        </div>               
                     </div>
                 </div>
             </template>

@@ -15,32 +15,34 @@
             <div class="level-left">
                 <div class="level-item">
                     <div class="mx-4 my-2">
-                        <img src="/static/logo.png" style="height:50px;"/>
+                        <a href="/">
+                            <img src="/static/logo.png" style="height:50px;"/>
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr'))}">
+            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdown_show: false}">
                 <div class="level-item">
-                    <div class="dropdown is-hoverable is-right mx-4 my-2" x-show="username">
-                <div class="dropdown-trigger">
-                    <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
-                        <span x-text="username"></span>
-                        <span class="icon is-small">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </span>
-                    </button>
-                </div>
-                <div class="dropdown-menu" id="dropdown-menu" role="menu">
-                    <div class="dropdown-content">
-                        <a href="#" class="dropdown-item">
-                            Logout
-                        </a>
+                    <div class="dropdown is-right mx-4 my-2" :class="dropdown_show ? 'is-active' : ''" x-show="username">
+                        <div class="dropdown-trigger">
+                            <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu" @click="dropdown_show = !dropdown_show" @click.outside="dropdown_show = false">
+                                <span x-text="username"></span>
+                                <span class="icon is-small">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                            <div class="dropdown-content">
+                                <a href="#" class="dropdown-item">
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                                </div>
                 </div>
             </div>
         </nav>
@@ -56,17 +58,6 @@
                 <li class="is-active"><a href="#" aria-current="page">Instances</a></li>
             </ul>
         </nav>
-        <button class="button is-primary is-clickable mb-6"
-                        title="Add a new Storage Manager instance"
-                        @click="show_add_storage_manager = true"
-                        x-show="show_add_button">
-            <span class="icon is-small">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
-                </svg>
-            </span>
-            <span>Add</span>
-        </button>
         <article class="message is-success" x-show="message != ''">
             <div class="message-body" x-text="message"></div>
         </article>
@@ -106,10 +97,36 @@
                 </div>
             </form>
         </div>
+        <h1 class="is-size-5 mb-4 px-2">
+            List of instances
+            <button class="button is-primary is-clickable ml-2 is-small"
+                    title="Add a new Storage Manager instance"
+                    @click="show_add_storage_manager = true"
+                    x-show="show_add_button">
+                <span class="icon is-small">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                    </svg>
+                </span>
+                <span>Add</span>
+            </button>
+        </h1>
         <div class="columns">
             <template x-for="sm in storage_managers">
                 <div class="column is-3">
                     <div class="card is-clickable m-2" @click="location.href=poolUrl(pool)">
+                        <div class="has-text-right" x-data="{dropdown_showing: false}">
+                            <div class="dropdown is-right" :class="dropdown_showing ? 'is-active' : ''">
+                                <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
+                                <div class="dropdown-menu has-text-left" role="menu">
+                                    <div class="dropdown-content">
+                                        <a class="dropdown-item" @click="deleteInstance(sm.name)" x-html="`<span class='has-text-danger'>${SVG_DELETE}</span> Delete`">
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="card-content">
                             <div class="media">
                                 <div class="media-left">
@@ -126,13 +143,6 @@
                                 </div>
                             </div>
                         </div>
-                        <footer class="card-footer">
-                            <p class="card-footer-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="has-text-danger w-6 h-6 icon is-small is-clickable" @click="deleteInstance(sm.name)">
-                                    <path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z" clip-rule="evenodd" />
-                                </svg>
-                            </p>
-                        </footer>
                     </div>
                 </div>
             </template>

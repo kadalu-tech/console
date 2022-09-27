@@ -44,38 +44,34 @@
             </div>
         </nav>
 
-        <button class="button is-primary is-clickable mb-6"
-                title="Create a Volume"
+        <h1 class="is-size-5 mb-4 px-2">
+            List of Volumes
+            <button class="button is-primary is-small is-clickable ml-2"
+                    title="Create a Volume"
                 @click="show_create_volume = true"
                 x-show="show_add_button">
-            <span class="icon is-small">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
-                </svg>
-            </span>
-            <span>Create Volume</span>
-        </button>
-
+                <span class="icon is-small">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                    </svg>
+                </span>
+                <span>Create</span>
+            </button>
+        </h1>
         <div class="columns is-multiline">
             <template x-for="(volume, idx) in volumes">
                 <div class="column is-4-tablet is-3-widescreen">
                     <div class="card is-3">
                         <div class="has-text-right" x-data="{dropdown_showing: false}">
                             <div class="dropdown is-right" :class="dropdown_showing ? 'is-active' : ''">
-                                <div class="dropdown-trigger is-clickable">
-                                    <span class="mt-2 mr-2" @click="dropdown_showing=!dropdown_showing">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon">
-                                            <path fill-rule="evenodd" d="M4.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clip-rule="evenodd" />
-                                        </svg>
-                                    </span>
-                                </div>
+                                <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
                                 <div class="dropdown-menu has-text-left" role="menu">
                                     <div class="dropdown-content">
-                                        <a class="dropdown-item" @click="dropdown_showing=false;startVolume(idx)" x-html="volumeStartButton(volume, idx)"></a>
-                                        <a class="dropdown-item" @click="dropdown_showing=false; stopVolume(idx)">
+                                        <a class="dropdown-item" @click="startVolume(idx)" x-html="volumeStartButton(volume, idx)"></a>
+                                        <a class="dropdown-item" @click="stopVolume(idx)">
                                             <span x-html="volumeStopButton(volume, idx)"></span>
                                         </a>
-                                        <a class="dropdown-item" @click="dropdown_showing=false;deleteVolume(idx)">
+                                        <a class="dropdown-item" @click="deleteVolume(idx)">
                                             <span x-html="volumeDeleteButton(volume, idx)"></span>
                                         </a>
                                     </div>

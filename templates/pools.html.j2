@@ -10,34 +10,37 @@
             </ul>
         </nav>
 
-        <button class="button is-primary is-clickable mb-6"
-                title="Create a Pool"
-                @click="show_create_pool = true"
-                x-show="show_create_button">
-            <span class="icon is-small">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
-                </svg>
-            </span>
-            <span>Create a Pool</span>
-        </button>
+        <h1 class="is-size-5 mb-4 px-2">
+            List of Pools
+            <button class="button is-primary is-small is-clickable ml-2"
+                    title="Create a Pool"
+                    @click="show_create_pool = true"
+                    x-show="show_create_button">
+                <span class="icon is-small">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                    </svg>
+                </span>
+                <span>Create</span>
+            </button>
+        </h1>
 
         <div class="columns is-multiline">
             <template x-for="pool in pools">
                 <div class="column is-4-tablet is-3-widescreen">
                     <div class="card is-clickable" @click="location.href=poolUrl(pool)">
-                    <div class="card-content">
-                        <div class="media">
-                            <div class="media-left">
-                                <figure class="image is-48x48" x-html="uuidThumbmail(pool.id)">
-                                </figure>
+                        <div class="card-content">
+                            <div class="media">
+                                <div class="media-left">
+                                    <figure class="image is-48x48" x-html="uuidThumbmail(pool.id)">
+                                    </figure>
+                                </div>
+                                <div class="media-content">
+                                    <p class="title is-4" x-text="pool.name"></p>
+                                    <p class="subtitle is-7" x-text="pool.id"></p>
+                                </div>
                             </div>
-                            <div class="media-content">
-                                <p class="title is-4" x-text="pool.name"></p>
-                                <p class="subtitle is-7" x-text="pool.id"></p>
-                            </div>
-                        </div>
-                    </div>               
+                        </div>               
                     </div>
                 </div>
             </template>

@@ -2,7 +2,7 @@
 
 {% block page_title %}Volumes List{% endblock %}
 {% block body %}
-    <div x-data="data" x-init="getVolumes">
+    <div x-data="data">
         <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
             <ul>
                 <li><a href="/">{% include "partials/icon_home.svg" %}</a></li>
@@ -403,119 +403,57 @@
              volumeUrl(volume) {
                  return `/volume?mgr=${this.mgr_url}&pool=${this.pool_name}&volume=${volume.name}`;
              },
-             startVolume(idx) {
+             async startVolume(idx) {
                  var volume = this.volumes[idx];
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${volume.name}/start`,
-                       {
-                           method: "POST",
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         return response.json();
-                     })
-                     .then((json) => this.refreshVolume(idx));
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     await mgr.pool(this.pool_name).volume(volume.name).start();
+                     this.volumes[idx] = await mgr.pool(this.pool_name).volume(volume.name).get(true);
+                 } catch (error) {
+                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     this.error = error;
+                 }
              },
-             stopVolume(idx) {
+             async stopVolume(idx) {
                  var volume = this.volumes[idx];
                  if (!confirm(`Are you sure want to stop the Volume "${volume.name}"?`)) {
                      return;
                  }
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${volume.name}/stop`,
-                       {
-                           method: "POST",
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         return response.json();
-                     })
-                     .then((json) => this.refreshVolume(idx));
+                 var volume = this.volumes[idx];
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     await mgr.pool(this.pool_name).volume(volume.name).stop();
+                     this.volumes[idx] = await mgr.pool(this.pool_name).volume(volume.name).get(true);
+                 } catch (error) {
+                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     this.error = error;
+                 }
              },
-             deleteVolume(idx) {
+             async deleteVolume(idx) {
                  var volume = this.volumes[idx];
                  if (!confirm(`Are you sure want to delete the Volume "${volume.name}"?`)) {
                      return;
                  }
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${volume.name}`,
-                       {
-                           method: "DELETE",
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         this.volumes = this.volumes.filter(function(value, index, arr){
-                             return value.name != volume.name;
-                         });
-                     });
-             },
-             refreshVolume(idx) {
                  var volume = this.volumes[idx];
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${volume.name}?state=1`,
-                       {
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         return response.json();
-                     })
-                     .then((json) => this.volumes[idx] = json);
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     await mgr.pool(this.pool_name).volume(volume.name).delete();
+                     this.volumes = this.volumes.filter(function(value, index, arr){
+                         return value.name != volume.name;
+                     });
+                 } catch (error) {
+                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     this.error = error;
+                 }
              },
-             getVolumes() {
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes?state=1`,
-                       {
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         return response.json();
-                     })
-                     .then((json) => this.volumes = json);
+             async init() {
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     this.volumes = await mgr.pool(this.pool_name).listVolumes(true);
+                 } catch (error) {
+                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     this.error = error;
+                 }
              }
          }))
      })

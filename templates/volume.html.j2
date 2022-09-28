@@ -83,25 +83,14 @@
              pool_name: qparams.get("pool"),
              volume_name: qparams.get("volume"),
              volume: {distribute_groups: [], metrics: {}},
-             getVolume() {
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${this.volume_name}?state=1`,
-                       {
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         return response.json();
-                     })
-                     .then((json) => this.volume = json);
+             async getVolume() {
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     this.volume = await mgr.pool(this.pool_name).volume(this.volume_name).get(true);
+                 } catch (error) {
+                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     this.error = error;
+                 }
              }
          }))
      })

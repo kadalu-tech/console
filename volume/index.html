@@ -7,6 +7,7 @@
         <title>Volume detail - Kadalu Storage Manager</title>
         <link rel="stylesheet" href="/static/css/stylesheet.css">
         <link rel="stylesheet" href="/static/css/app.css">
+        <script src="/static/js/kadalu-storage-min.js"></script>
         <script src="/static/js/app.js"></script>
         <script defer src="/static/js/alpinejs@3.10.2.js"></script>
     </head>
@@ -37,7 +38,7 @@
                         </div>
                         <div class="dropdown-menu" id="dropdown-menu" role="menu">
                             <div class="dropdown-content">
-                                <a @click="logout(qparams.get('mgr'))" class="dropdown-item">
+                                <a @click="await logout(qparams.get('mgr'))" class="dropdown-item">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon is-small">
                                         <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 006 5.25v13.5a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5V15a.75.75 0 011.5 0v3.75a3 3 0 01-3 3h-6a3 3 0 01-3-3V5.25a3 3 0 013-3h6a3 3 0 013 3V9A.75.75 0 0115 9V5.25a1.5 1.5 0 00-1.5-1.5h-6zm5.03 4.72a.75.75 0 010 1.06l-1.72 1.72h10.94a.75.75 0 010 1.5H10.81l1.72 1.72a.75.75 0 11-1.06 1.06l-3-3a.75.75 0 010-1.06l3-3a.75.75 0 011.06 0z" clip-rule="evenodd" />
                                     </svg>
@@ -135,25 +136,14 @@
              pool_name: qparams.get("pool"),
              volume_name: qparams.get("volume"),
              volume: {distribute_groups: [], metrics: {}},
-             getVolume() {
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${this.volume_name}?state=1`,
-                       {
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         return response.json();
-                     })
-                     .then((json) => this.volume = json);
+             async getVolume() {
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     this.volume = await mgr.pool(this.pool_name).volume(this.volume_name).get(true);
+                 } catch (error) {
+                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     this.error = error;
+                 }
              }
          }))
      })

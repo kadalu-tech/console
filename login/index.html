@@ -6,6 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title> - Kadalu Storage Manager</title>
         <link rel="stylesheet" href="/static/css/stylesheet.css">
+        <script src="/static/js/kadalu-storage-min.js"></script>
         <script src="/static/js/app.js"></script>
         <script defer src="/static/js/alpinejs@3.10.2.js"></script>
     </head>
@@ -72,7 +73,7 @@
                  password: "",
                  mgr_url: qparams.get("mgr"),
                  error: "",
-                 onLogin() {
+                 async onLogin() {
                      if (this.username.trim() == "") {
                          this.error = "Username is empty";
                          return
@@ -82,29 +83,17 @@
                          this.error = "Password is empty";
                          return
                      }
-                     fetch(`${this.mgr_url}/api/v1/users/${this.username}/api-keys`,
-                           {
-                               method: "POST",
-                               headers: {
-                                   'Content-Type': 'application/json'
-                               },
-                               body: JSON.stringify({password: this.password})
-                           }
-                     )
-                         .then((response) => response.json())
-                         .then((json) => {
-                             if (json.error) {
-                                 this.error = json.error;
-                             } else {
-                                 setCookie(`${mgrApiCookieName}-token`, json.token);
-                                 setCookie(`${mgrApiCookieName}-userid`, json.user_id);
-                                 setCookie(`${mgrApiCookieName}-api_key_id`, json.id);
-                                 setLoggedinUsername(qparams.get("mgr"), json.username);
-                                 location.href = `/pools?mgr=${qparams.get("mgr")}`;
-                             }
-                         }).catch((error) => {
-                             this.error = error;
-                         });
+                     const mgr = new StorageManager(this.mgr_url);
+                     try {
+                         const api_key = await mgr.generateApiKey(this.username, this.password);
+                         setCookie(`${mgrApiCookieName}-token`, api_key.token);
+                         setCookie(`${mgrApiCookieName}-userid`, api_key.user_id);
+                         setCookie(`${mgrApiCookieName}-api_key_id`, api_key.id);
+                         setLoggedinUsername(qparams.get("mgr"), this.username);
+                         location.href = `/pools?mgr=${qparams.get("mgr")}`;
+                     } catch (Exception) {
+                         this.error = json.error;
+                     }
                  }
              }))
          })

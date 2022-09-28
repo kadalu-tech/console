@@ -7,6 +7,7 @@
         <title>Volumes List - Kadalu Storage Manager</title>
         <link rel="stylesheet" href="/static/css/stylesheet.css">
         <link rel="stylesheet" href="/static/css/app.css">
+        <script src="/static/js/kadalu-storage-min.js"></script>
         <script src="/static/js/app.js"></script>
         <script defer src="/static/js/alpinejs@3.10.2.js"></script>
     </head>
@@ -37,7 +38,7 @@
                         </div>
                         <div class="dropdown-menu" id="dropdown-menu" role="menu">
                             <div class="dropdown-content">
-                                <a @click="logout(qparams.get('mgr'))" class="dropdown-item">
+                                <a @click="await logout(qparams.get('mgr'))" class="dropdown-item">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon is-small">
                                         <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 006 5.25v13.5a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5V15a.75.75 0 011.5 0v3.75a3 3 0 01-3 3h-6a3 3 0 01-3-3V5.25a3 3 0 013-3h6a3 3 0 013 3V9A.75.75 0 0115 9V5.25a1.5 1.5 0 00-1.5-1.5h-6zm5.03 4.72a.75.75 0 010 1.06l-1.72 1.72h10.94a.75.75 0 010 1.5H10.81l1.72 1.72a.75.75 0 11-1.06 1.06l-3-3a.75.75 0 010-1.06l3-3a.75.75 0 011.06 0z" clip-rule="evenodd" />
                                     </svg>
@@ -52,7 +53,7 @@
 
         <div class="px-4">
             
-    <div x-data="data" x-init="getVolumes">
+    <div x-data="data">
         <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
             <ul>
                 <li><a href="/"><svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 20 20" fill="currentColor">
@@ -63,14 +64,134 @@
                 <li class="is-active"><a href="#" aria-current="page">Volumes</a></li>
             </ul>
         </nav>
-        <div x-show="volumes.length == 0">
+        <div x-show="volumes.length == 0" class="mb-6">
             <article class="message is-info">
                 <div class="message-body">
                     <h3 class="has-text-weight-semibold">Create a new Volume.</h3>
                     <p>No Volumes are created under this Pool.</p>
                 </div>
             </article>
+
+            <form @submit.prevent="createVolume">
+                <div class="columns">
+                    <div class="column is-8">
+                        <div class="field">
+                            <label class="label">Name</label>
+                            <div class="control">
+                                <input class="input" x-model="req_volume_name" type="text"
+                                       placeholder="data">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Type</label>
+                            <div class="control">
+                                <div class="select">
+                                    <select x-model="req_type">
+                                        <option>Distribute</option>
+                                        <option>Replica 2</option>
+                                        <option>Replica 3</option>
+                                        <option>Disperse</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field" x-show="req_type == 'Disperse'">
+                            <label class="label">Data</label>
+                            <div class="select">
+                                <select x-model="req_disperse_data">
+                                    <template x-for="count in [2, 4, 5, 6, 7, 8, 9, 10]">
+                                        <option x-text="count"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field" x-show="req_type == 'Disperse'">
+                            <label class="label">Redundancy</label>
+                            <div class="select">
+                                <select x-model="req_disperse_redundancy">
+                                    <template x-for="count in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]">
+                                        <option x-text="count"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="checkbox">
+                                <input type="checkbox" x-model="req_is_common_path">
+                                Common path for Storage units
+                            </label>
+                        </div>
+                        <div class="field" x-show="req_is_common_path">
+                            <label class="label">Common Path</label>
+                            <div class="control">
+                                <input class="input" x-model="req_common_path" type="text" placeholder="">
+                            </div>
+                        </div>
+
+                        <template x-for="dist_grp in req_distribute_group_count">
+                            <div class="has-background-info-light p-2 mb-2">
+                                <p class="is-size-6">Distribute Group <span x-text="dist_grp"></span></p>
+                                <template x-for="idx in req_distribute_group_size()">
+                                    <div class="field has-addons">
+                                        <div class="control">
+                                            <div class="select">
+                                                <select :id="`storage-unit-node-${req_storageUnitId(dist_grp-1, idx)}`" @select="ts=new Date()">
+                                                    <template x-for="node in req_nodes">
+                                                        <option x-text="node"></option>
+                                                    </template>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="control">
+                                            <input class="input" :id="`storage-unit-port-${req_storageUnitId(dist_grp-1, idx)}`"
+                                                   type="text"
+                                                   @input="ts=new Date()"
+                                                   placeholder="Port: auto">
+                                        </div>
+                                        <div class="control">
+                                            <input class="input" :id="`storage-unit-path-${req_storageUnitId(dist_grp-1, idx)}`"
+                                                   type="text"
+                                                   @input="ts=new Date()"
+                                                   :class="req_is_common_path ? 'is-static' : ''"
+                                                   :placeholder="req_storageUnitPlaceholder(idx)">
+                                        </div>
+                                    </div>
+                                </template>
+                                <div class="has-text-right" x-show="dist_grp == req_distribute_group_count">
+                                    <a class="button" @click="req_distribute_group_count++">+</a>
+                                </div>
+                            </div>
+                        </template>
+
+                        <div class="">
+                            <div class="field">
+                                <label class="checkbox">
+                                    <input type="checkbox" x-model="req_no_start">
+                                    Do not start the Volume after create
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-4">
+                        <div class="container has-background-warning-light p-4" x-html="req_summary()"></div>
+                    </div>
+                </div>
+                <div class="">
+                    <div class="field is-grouped">
+                        <div class="control">
+                            <input type="submit" class="button is-link" value="Create"/>
+                        </div>
+                        <div class="control">
+                            <button class="button is-link is-light" @click="show_create_pool = false; pool_name = ''">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
+
         <nav class="level has-background-primary-light py-4" x-show="volumes.length > 0">
             <div class="level-item has-text-centered">
                 <div>
@@ -108,8 +229,8 @@
             List of Volumes
             <button class="button is-primary is-small is-clickable ml-2"
                     title="Create a Volume"
-                @click="show_create_volume = true"
-                x-show="show_add_button">
+                    @click="show_create_volume = true"
+                    x-show="show_add_button">
                 <span class="icon is-small">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
@@ -183,6 +304,149 @@
 
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
+             ts: "",
+             req_volume_name: "",
+             req_type: "Distribute",
+             req_is_common_path: false,
+             req_common_path: "",
+             req_distribute_group_count: 1,
+             req_storage_units: [],
+             req_nodes: ["server1.example.com"],
+             req_disperse_data: 2,
+             req_disperse_redundancy: 1,
+             req_no_start: false,
+             req_type_name() {
+                 var pfx = '';
+                 if (this.req_type != 'Distribute' && this.req_distribute_group_count > 1) {
+                     pfx = 'Distributed ';
+                 }
+
+                 var sfx = '';
+                 if (this.req_type == 'Disperse') {
+                     sfx = `(data: ${this.req_disperse_data}, redundancy: ${this.req_disperse_redundancy})`;
+                 }
+                 return `${pfx}${this.req_type}${sfx}`;
+             },
+             req_summary() {
+                 summary = `<p class="is-size-4">Summary</p>
+                            <p class="is-hidden">${this.ts}</p>
+                            <p class="">Name: ${this.pool_name}/${this.req_volume_name == '' ? '-' : this.req_volume_name}</p>
+                            <p class="">Type: ${this.req_type_name()}</p>
+                            <p class="">Use common path: ${this.req_is_common_path ? `Yes (${this.req_common_path})` : 'No'}</p>
+                            <p class="">Start Volume after create: ${this.req_no_start ? 'No' : 'Yes'}</p>
+                            <p class="">Number of distribute groups: ${this.req_distribute_group_count}</p>`;
+                
+                 for (var i=0; i<this.req_distribute_group_count; i++) {
+                     summary += `<p>Distribute group ${i+1}</p>`;
+                     for (var j=0; j<this.req_distribute_group_size(); j++) {
+                         var idx = i*this.req_distribute_group_size() + j + 1;
+                         var node = document.getElementById(`storage-unit-node-${idx}`).value;
+                         var port = document.getElementById(`storage-unit-port-${idx}`).value;
+                         var path = document.getElementById(`storage-unit-path-${idx}`).value;
+                         if (this.req_is_common_path) {
+                             path = this.req_common_path;
+                         }
+                         if (port != '') {
+                             port = `:${port}`;
+                         }
+                         summary += `<p class="ml-2">${node}${port}:${path}</p>`
+                     }
+                 }
+                 return summary;
+             },
+             get_replica_count() {
+                 if (this.req_type == 'Replica 2') {
+                     return 2;
+                 }
+                 if (this.req_type == 'Replica 3') {
+                     return 3;
+                 }
+                 return 0;
+             },
+             get_disperse_count() {
+                 if (this.req_type != 'Disperse') {
+                     return 0;
+                 }
+
+                 return parseInt(this.req_disperse_data, 10) + parseInt(this.req_disperse_redundancy, 10);
+             },
+             get_redundancy_count() {
+                 if (this.req_type != 'Disperse') {
+                     return 0;
+                 }
+
+                 return parseInt(this.req_disperse_redundancy, 10);
+             },
+             get_storage_unit_path(g_idx, u_idx, size) {
+                 if (this.req_is_common_path) {
+                     return this.req_common_path;
+                 }
+                 return document.getElementById(`storage-unit-path-${g_idx*size + u_idx + 1}`).value;
+             },
+             get_storage_unit_port(g_idx, u_idx, size) {
+                 var port = document.getElementById(`storage-unit-port-${g_idx*size + u_idx + 1}`).value;
+                 if (port == '') {
+                     return 0;
+                 }
+
+                 return parseInt(port, 10);
+             },
+             get_storage_unit_node(g_idx, u_idx, size) {
+                 return document.getElementById(`storage-unit-node-${g_idx*size + u_idx + 1}`).value
+             },
+             createVolume() {
+                 var req = {
+                     name: this.req_volume_name,
+                     distribute_groups: [],
+                     no_start: this.req_no_start
+                 }
+                 var dist_grp_size = this.req_distribute_group_size();
+                 for (var i=0; i<this.req_distribute_group_count; i++) {
+                     var dist_grp = {
+                         replica_count: this.get_replica_count(),
+                         disperse_count: this.get_disperse_count(),
+                         redundancy_count: this.get_redundancy_count(),
+                         storage_units: [],
+                     };
+                     for (var j=0; j<dist_grp_size; j++) {
+                         dist_grp.storage_units.push({
+                             path: this.get_storage_unit_path(i, j, dist_grp_size),
+                             port: this.get_storage_unit_port(i, j, dist_grp_size),
+                             node: {
+                                 name: this.get_storage_unit_node(i, j, dist_grp_size)
+                             }
+                         });
+                     }
+
+                     req.distribute_groups.push(dist_grp);
+                 }
+
+
+             },
+             req_disperse_count() {
+                 return parseInt(this.req_disperse_data, 10) + parseInt(this.req_disperse_redundancy, 10);
+             },
+             req_distribute_group_size() {
+                 if (this.req_type == "Replica 2") {
+                     return 2;
+                 } else if (this.req_type == "Replica 3") {
+                     return 3;
+                 } else if (this.req_type == "Disperse") {
+                     return this.req_disperse_count();
+                 }
+
+                 return 1;
+             },
+             req_storageUnitId(dist_grp_idx, storage_unit_idx) {
+                 return dist_grp_idx * this.req_distribute_group_size() + storage_unit_idx;
+             },
+             req_storageUnitPlaceholder(idx) {
+                 if (this.req_is_common_path) {
+                     return this.req_common_path;
+                 }
+
+                 return `/data/${this.req_volume_name == '' ? 'VOL' : this.req_volume_name}/s${idx}`;
+             },
              link_name: "volumes",
              mgr_url: qparams.get("mgr"),
              pool_name: qparams.get("pool"),
@@ -192,119 +456,57 @@
              volumeUrl(volume) {
                  return `/volume?mgr=${this.mgr_url}&pool=${this.pool_name}&volume=${volume.name}`;
              },
-             startVolume(idx) {
+             async startVolume(idx) {
                  var volume = this.volumes[idx];
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${volume.name}/start`,
-                       {
-                           method: "POST",
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         return response.json();
-                     })
-                     .then((json) => this.refreshVolume(idx));
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     await mgr.pool(this.pool_name).volume(volume.name).start();
+                     this.volumes[idx] = await mgr.pool(this.pool_name).volume(volume.name).get(true);
+                 } catch (error) {
+                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     this.error = error;
+                 }
              },
-             stopVolume(idx) {
+             async stopVolume(idx) {
                  var volume = this.volumes[idx];
                  if (!confirm(`Are you sure want to stop the Volume "${volume.name}"?`)) {
                      return;
                  }
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${volume.name}/stop`,
-                       {
-                           method: "POST",
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         return response.json();
-                     })
-                     .then((json) => this.refreshVolume(idx));
+                 var volume = this.volumes[idx];
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     await mgr.pool(this.pool_name).volume(volume.name).stop();
+                     this.volumes[idx] = await mgr.pool(this.pool_name).volume(volume.name).get(true);
+                 } catch (error) {
+                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     this.error = error;
+                 }
              },
-             deleteVolume(idx) {
+             async deleteVolume(idx) {
                  var volume = this.volumes[idx];
                  if (!confirm(`Are you sure want to delete the Volume "${volume.name}"?`)) {
                      return;
                  }
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${volume.name}`,
-                       {
-                           method: "DELETE",
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         this.volumes = this.volumes.filter(function(value, index, arr){
-                             return value.name != volume.name;
-                         });
-                     });
-             },
-             refreshVolume(idx) {
                  var volume = this.volumes[idx];
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes/${volume.name}?state=1`,
-                       {
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         return response.json();
-                     })
-                     .then((json) => this.volumes[idx] = json);
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     await mgr.pool(this.pool_name).volume(volume.name).delete();
+                     this.volumes = this.volumes.filter(function(value, index, arr){
+                         return value.name != volume.name;
+                     });
+                 } catch (error) {
+                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     this.error = error;
+                 }
              },
-             getVolumes() {
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${this.pool_name}/volumes?state=1`,
-                       {
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         return response.json();
-                     })
-                     .then((json) => this.volumes = json);
+             async init() {
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     this.volumes = await mgr.pool(this.pool_name).listVolumes(true);
+                 } catch (error) {
+                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     this.error = error;
+                 }
              }
          }))
      })

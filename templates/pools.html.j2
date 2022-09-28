@@ -2,7 +2,7 @@
 
 {% block page_title %}Pools List{% endblock %}
 {% block body %}
-    <div x-data="data" x-init="getPools">
+    <div x-data="data">
         <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
             <ul>
                 <li><a href="/">{% include "partials/icon_home.svg" %}</a></li>
@@ -103,94 +103,56 @@
              poolUrl(pool) {
                  return '/volumes?mgr=' + this.mgr_url + '&pool=' + pool.name;
              },
-             getPools() {
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(this.mgr_url + '/api/v1/pools',
-                       {
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         return response.json();
-                     })
-                     .then((json) => {
-                         this.pools = json
-                         if (this.pools.length > 0) {
-                             this.show_create_pool = false;
-                         }
-                     });
+             async init() {
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     this.pools = await mgr.listPools();
+                     if (this.pools.length > 0) {
+                         this.show_create_pool = false;
+                     }
+                 } catch (error) {
+                     /* TODO: if 401/403 resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     this.error = error;
+                 }
              },
-             createPool() {
+             async createPool() {
                  if (this.pool_name.trim() == "") {
                      this.error = "Pool name is empty";
                      return
                  }
 
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools`,
-                       {
-                           method: "POST",
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id,
-                               'Content-Type': 'application/json'
-                           },
-                           body: JSON.stringify({name: this.pool_name})
-                       }
-                 )
-                     .then((response) => response.json())
-                     .then((json) => {
-                         if (json.error) {
-                             this.error = json.error;
-                         } else {
-                             this.getPools();
-                             this.pool_name = "";
-                             this.error = "";
-                             this.show_create_pool = false;
-                             this.message = "Pool added successfully!";
-                             this.show_create_button = true;
-                             setTimeout(function() {
-                                 this.message = "";
-                             }, 5000);
-                         }
-                     }).catch((error) => {
-                         this.error = error;
-                     });
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     await mgr.createPool(this.pool_name);
+                     this.pools = await mgr.listPools();
+                     this.pool_name = "";
+                     this.error = "";
+                     this.show_create_pool = false;
+                     this.message = "Pool added successfully!";
+                     this.show_create_button = true;
+                     setTimeout(function() {
+                         this.message = "";
+                     }, 5000);
+                 } catch (error) {
+                     this.error = error;
+                 }
              },
-             deletePool(idx) {
+             async deletePool(idx) {
                  var pool = this.pools[idx];
                  if (!confirm(`Are you sure want to delete the Pool "${pool.name}"?`)) {
                      return;
                  }
-                 var auth = getCookieValue(getMgrCookieName(this.mgr_url, "-token"));
-                 var user_id = getCookieValue(getMgrCookieName(this.mgr_url, "-userid"));
-                 fetch(`${this.mgr_url}/api/v1/pools/${pool.name}`,
-                       {
-                           method: "DELETE",
-                           headers: {
-                               "Authorization": `Bearer ${auth}`,
-                               "X-User-ID": user_id
-                           }
-                       }
-                 )
-                     .then((response) => {
-                         if (response.status == 401 || response.status == 403) {
-                             resetCookiesAndRedirectToLogin(qparams.get("mgr"));
-                         }
-                         
-                         this.pools = this.pools.filter(function(value, index, arr){
-                             return value.name != pool.name;
-                         });
-                     });
+                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 try {
+                     await mgr.pool(pool.name).delete();
+                 } catch (error) {
+                     /* TODO: Redirect only if error is 401 or 403 */
+                     resetCookiesAndRedirectToLogin(qparams.get("mgr"));
+                 }
+
+                 this.pools = this.pools.filter(function(value, index, arr){
+                     return value.name != pool.name;
+                 });
              }
          }))
      })

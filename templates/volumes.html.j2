@@ -11,14 +11,24 @@
                 <li class="is-active"><a href="#" aria-current="page">Volumes</a></li>
             </ul>
         </nav>
-        <div x-show="volumes.length == 0 | showCreateVolume" class="mb-6">
-            <article class="message is-info">
-                <div class="message-body">
-                    <h3 class="has-text-weight-semibold">Create a new Volume.</h3>
-                    <p>No Volumes are created under this Pool.</p>
-                </div>
-            </article>
 
+        <div x-show="volumes.length == 0 && showWelcome" class="columns">
+            <section class="hero column is-8-desktop is-offset-2-desktop">
+                <div class="hero-body has-text-centered">
+                    <p class="title">
+                        Storage Pool without Volumes!
+                    </p>
+                    <p class="subtitle">
+                        Start creating Volumes.
+                    </p>
+                    <button class="button is-primary my-3" @click="showWelcome = false; showCreateVolume = true">Create</button>
+                    <p class="help"></p>
+                    <img src="/static/undraw_ideas_re_7twj.svg" class="mt-6"/>
+                </div>
+            </section>
+        </div>
+
+        <div class="modal" :class="showCreateVolume ? 'is-active' : ''">
             {% include "partials/volume_create.html" %}
         </div>
 
@@ -140,6 +150,7 @@
              volumes: [],
              showCreateButton: true,
              showCreateVolume: false,
+             showWelcome: false,
              volumeUrl(volume) {
                  return `/volume?mgr=${this.mgrUrl}&pool=${this.poolName}&volume=${volume.name}`;
              },
@@ -190,6 +201,9 @@
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
                      this.volumes = await mgr.pool(this.poolName).listVolumes(true);
+                     if (this.volumes.length === 0) {
+                         this.showWelcome = true;
+                     }
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;

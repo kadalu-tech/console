@@ -1,121 +1,127 @@
-<form x-data="volume_create_data" @submit.prevent="createVolume">
-    <div class="columns">
-        <div class="column is-8">
-            <div class="field">
-                <label class="label">Name</label>
-                <div class="control">
-                    <input class="input" x-model="req.name" type="text"
-                           placeholder="data">
-                </div>
-            </div>
-            <div class="field">
-                <label class="label">Type</label>
-                <div class="control">
-                    <div class="select">
-                        <select x-model="req.type">
-                            <option>Distribute</option>
-                            <option>Replica 2</option>
-                            <option>Replica 3</option>
-                            <option>Disperse</option>
-                        </select>
+<div class="modal-background"></div>
+<div class="modal-card" x-data="volume_create_data">
+    <header class="modal-card-head">
+        <p class="modal-card-title">Create a Storage Pool</p>
+        <button class="delete" @click="resetForm()" aria-label="close"></button>
+    </header>
+    <section class="modal-card-body">
+        <article class="message is-danger" x-show="error != ''">
+            <div class="message-body" x-text="error"></div>
+        </article>
+        <form @submit.prevent="createVolume">
+            <div class="columns">
+                <div class="column is-8">
+                    <div class="field">
+                        <label class="label">Name</label>
+                        <div class="control">
+                            <input class="input" x-model="req.name" type="text"
+                                   placeholder="data">
+                        </div>
                     </div>
-                </div>
-            </div>
+                    <div class="field">
+                        <label class="label">Type</label>
+                        <div class="control">
+                            <div class="select">
+                                <select x-model="req.type">
+                                    <option>Distribute</option>
+                                    <option>Replica 2</option>
+                                    <option>Replica 3</option>
+                                    <option>Disperse</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="field" x-show="req.type == 'Disperse'">
-                <label class="label">Data</label>
-                <div class="select">
-                    <select x-model="req.disperseData">
-                        <template x-for="count in [2, 4, 5, 6, 7, 8, 9, 10]">
-                            <option x-text="count"></option>
-                        </template>
-                    </select>
-                </div>
-            </div>
+                    <div class="field" x-show="req.type == 'Disperse'">
+                        <label class="label">Data</label>
+                        <div class="select">
+                            <select x-model="req.disperseData">
+                                <template x-for="count in [2, 4, 5, 6, 7, 8, 9, 10]">
+                                    <option x-text="count"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
 
-            <div class="field" x-show="req.type == 'Disperse'">
-                <label class="label">Redundancy</label>
-                <div class="select">
-                    <select x-model="req.disperseRedundancy">
-                        <template x-for="count in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]">
-                            <option x-text="count"></option>
-                        </template>
-                    </select>
-                </div>
-            </div>
+                    <div class="field" x-show="req.type == 'Disperse'">
+                        <label class="label">Redundancy</label>
+                        <div class="select">
+                            <select x-model="req.disperseRedundancy">
+                                <template x-for="count in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]">
+                                    <option x-text="count"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
 
-            <div class="field">
-                <label class="checkbox">
-                    <input type="checkbox" x-model="req.isCommonPath">
-                    Common path for Storage units
-                </label>
-            </div>
-            <div class="field" x-show="req.isCommonPath">
-                <label class="label">Common Path</label>
-                <div class="control">
-                    <input class="input" x-model="req.commonPath" type="text" placeholder="">
-                </div>
-            </div>
+                    <div class="field">
+                        <label class="checkbox">
+                            <input type="checkbox" x-model="req.isCommonPath">
+                            Common path for Storage units
+                        </label>
+                    </div>
+                    <div class="field" x-show="req.isCommonPath">
+                        <label class="label">Common Path</label>
+                        <div class="control">
+                            <input class="input" x-model="req.commonPath" type="text" placeholder="">
+                        </div>
+                    </div>
 
-            <template x-for="distGrp in req.distributeCount">
-                <div class="has-background-info-light p-2 mb-2">
-                    <p class="is-size-6">Distribute Group <span x-text="distGrp"></span></p>
-                    <template x-for="idx in getDistributeSize()">
-                        <div class="field has-addons">
-                            <div class="control">
-                                <div class="select">
-                                    <select :id="`storage-unit-node-${getStorageUnitId(distGrp-1, idx-1)}`" @select="req.ts=new Date()">
-                                        <template x-for="node in req.nodes">
-                                            <option x-text="node"></option>
-                                        </template>
-                                    </select>
+                    <template x-for="distGrp in req.distributeCount">
+                        <div class="has-background-info-light p-2 mb-2">
+                            <p class="is-size-6">Distribute Group <span x-text="distGrp"></span></p>
+                            <template x-for="idx in getDistributeSize()">
+                                <div class="field has-addons">
+                                    <div class="control">
+                                        <div class="select">
+                                            <select :id="`storage-unit-node-${getStorageUnitId(distGrp-1, idx-1)}`" @select="req.ts=new Date()">
+                                                <template x-for="node in req.nodes">
+                                                    <option x-text="node"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="control">
+                                        <input class="input" :id="`storage-unit-port-${getStorageUnitId(distGrp-1, idx-1)}`"
+                                               type="text"
+                                               @input="req.ts=new Date()"
+                                               placeholder="Port: auto">
+                                    </div>
+                                    <div class="control">
+                                        <input class="input" :id="`storage-unit-path-${getStorageUnitId(distGrp-1, idx-1)}`"
+                                               type="text"
+                                               @input="req.ts=new Date()"
+                                               :class="req.isCommonPath ? 'is-static' : ''"
+                                               :placeholder="getStorageUnitPlaceholder(idx)">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="control">
-                                <input class="input" :id="`storage-unit-port-${getStorageUnitId(distGrp-1, idx-1)}`"
-                                       type="text"
-                                       @input="req.ts=new Date()"
-                                       placeholder="Port: auto">
-                            </div>
-                            <div class="control">
-                                <input class="input" :id="`storage-unit-path-${getStorageUnitId(distGrp-1, idx-1)}`"
-                                       type="text"
-                                       @input="req.ts=new Date()"
-                                       :class="req.isCommonPath ? 'is-static' : ''"
-                                       :placeholder="getStorageUnitPlaceholder(idx)">
+                            </template>
+                            <div class="has-text-right" x-show="distGrp == req.distributeCount">
+                                <a class="button" @click="req.distributeCount++">+</a>
                             </div>
                         </div>
                     </template>
-                    <div class="has-text-right" x-show="distGrp == req.distributeCount">
-                        <a class="button" @click="req.distributeCount++">+</a>
+
+                    <div class="">
+                        <div class="field">
+                            <label class="checkbox">
+                                <input type="checkbox" x-model="req.noStart">
+                                Do not start the Volume after create
+                            </label>
+                        </div>
                     </div>
                 </div>
-            </template>
-
-            <div class="">
-                <div class="field">
-                    <label class="checkbox">
-                        <input type="checkbox" x-model="req.noStart">
-                        Do not start the Volume after create
-                    </label>
+                <div class="column is-4">
+                    <div class="container has-background-warning-light p-4" x-html="reqSummary()"></div>
                 </div>
             </div>
-        </div>
-        <div class="column is-4">
-            <div class="container has-background-warning-light p-4" x-html="reqSummary()"></div>
-        </div>
-    </div>
-    <div class="">
-        <div class="field is-grouped">
-            <div class="control">
-                <input type="submit" class="button is-link" value="Create"/>
-            </div>
-            <div class="control">
-                <button class="button is-link is-light" @click="showCreateVolume = false; req.name = ''">Cancel</button>
-            </div>
-        </div>
-    </div>
-</form>
+        </form>
+    </section>
+    <footer class="modal-card-foot">
+        <button class="button is-link" @click="createVolume()">Create</button>
+        <button class="button is-link is-light" @click="resetForm()">Cancel</button>
+    </footer>
+</div>
 <script>
  document.addEventListener('alpine:init', () => {
      Alpine.data('volume_create_data', () => ({
@@ -130,6 +136,10 @@
              disperseData: 2,
              disperseRedundancy: 1,
              noStart: false
+         },
+         resetForm() {
+             this.showCreateVolume = false;
+             this.showWelcome=true;
          },
          getTypeName() {
              var pfx = '';

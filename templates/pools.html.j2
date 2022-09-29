@@ -108,9 +108,9 @@
              linkName: "pools",
              mgrUrl: qparams.get("mgr"),
              pools: [],
-             showWelcome: true,
+             showWelcome: false,
              showCreateButton: true,
-             showCreatePool: true,
+             showCreatePool: false,
              poolName: "",
              poolUrl(pool) {
                  return '/volumes?mgr=' + this.mgrUrl + '&pool=' + pool.name;
@@ -119,8 +119,8 @@
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
                      this.pools = await mgr.listPools();
-                     if (this.pools.length > 0) {
-                         this.showCreatePool = false;
+                     if (this.pools.length == 0) {
+                         this.showWelcome = true;
                      }
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error)

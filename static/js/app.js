@@ -41,6 +41,7 @@ function resetCookiesAndRedirectToLogin(mgrUrl) {
     setCookie(`${mgrApiCookieName}-token`, "");
     setCookie(`${mgrApiCookieName}-userid`, "");
     setCookie(`${mgrApiCookieName}-api_key_id`, "");
+    setCookie(`${mgrApiCookieName}-user`, "");
     handleRedirectToLogin(mgrUrl)
 }
 
@@ -272,11 +273,11 @@ function volumeDeleteButton(volume, idx) {
 function getLoggedinUsername(mgrUrl) {
     var mgrApiCookieName = encodeURIComponent(mgrUrl);
     var user = getCookieValue(`${mgrApiCookieName}-user`);
-    if (user) {
+    if (user && user != '') {
         return `${user} @ ${mgrUrl}`;
     }
 
-    return user;
+    return null;
 }
 
 function setLoggedinUsername(mgrUrl, value) {

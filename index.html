@@ -4,7 +4,8 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>List of Storage Manager instances - Kadalu Storage Manager</title>
+        <link rel="icon" type="image/png" href="/static/favicon.png"/>
+        <title>Home - Kadalu Storage Console</title>
         <link rel="stylesheet" href="/static/css/stylesheet.css">
         <link rel="stylesheet" href="/static/css/app.css">
         <script src="/static/js/kadalu-storage-min.js"></script>
@@ -12,259 +13,127 @@
         <script defer src="/static/js/alpinejs@3.10.2.js"></script>
     </head>
     <body>
-        <nav class="level has-background-primary">
-            <div class="level-left">
-                <div class="level-item">
-                    <div class="mx-4 my-2">
-                        <a href="/">
-                            <img src="/static/logo.png" style="height:50px;"/>
-                        </a>
-                    </div>
-                </div>
+        <nav class="navbar is-primary" role="navigation" aria-label="main navigation" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdownShow: false, menuShow: false}">
+            <div class="navbar-brand">
+                <a class="navbar-item" href="/">
+                    <img src="/static/logo.png" style="height:70px;"/>
+                </a>
+
+                <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample" @click="menuShow = !menuShow" :class="menuShow ? 'is-active' : ''">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </a>
             </div>
 
-            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdownShow: false}">
-                <div class="level-item">
-                    <div class="dropdown is-right mx-4 my-2" :class="dropdownShow ? 'is-active' : ''" x-show="username">
-                        <div class="dropdown-trigger">
-                            <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu" @click="dropdownShow = !dropdownShow" @click.outside="dropdownShow = false">
-                                <span x-text="username"></span>
-                                <span class="icon is-small">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                    </svg>
-                                </span>
-                            </button>
-                        </div>
-                        <div class="dropdown-menu" id="dropdown-menu" role="menu">
-                            <div class="dropdown-content">
-                                <a @click="await logout(qparams.get('mgr'))" class="dropdown-item">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon is-small">
-                                        <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 006 5.25v13.5a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5V15a.75.75 0 011.5 0v3.75a3 3 0 01-3 3h-6a3 3 0 01-3-3V5.25a3 3 0 013-3h6a3 3 0 013 3V9A.75.75 0 0115 9V5.25a1.5 1.5 0 00-1.5-1.5h-6zm5.03 4.72a.75.75 0 010 1.06l-1.72 1.72h10.94a.75.75 0 010 1.5H10.81l1.72 1.72a.75.75 0 11-1.06 1.06l-3-3a.75.75 0 010-1.06l3-3a.75.75 0 011.06 0z" clip-rule="evenodd" />
-                                    </svg>
-                                    Logout
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </nav>
+            <div id="navbarBasicExample" class="navbar-menu" :class="menuShow ? 'is-active' : ''">
+                <div class="navbar-start">
+                    <a href="/" class="navbar-item">
+                        Home
+                    </a>
 
-        <div class="px-4">
-            
-    <div x-data="data" x-init="getStorageManagers">
-        <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
-            <ul>
-                <li><a href="/"><svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 20 20" fill="currentColor">
-  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-</svg></a></li>
-                <li class="is-active"><a href="#" aria-current="page">Instances</a></li>
-            </ul>
-        </nav>
-        <article class="message is-success" x-show="message != ''">
-            <div class="message-body" x-text="message"></div>
-        </article>
-        <div x-show="storageManagers.length == 0 || showAddStorageManager" class="mr-5 mb-6">
-            <article class="message is-info">
-                <div class="message-body">
-                    <h3 class="has-text-weight-semibold">Add a new Storage Manager instance.</h3>
-                    All instances details are saved in local storage of your browser. The Manager URL added here are not available in other browser instances. API calls to get Storage Pools and Volumes information are initiated from the browser and no information is shared with us.
-                </div>
-            </article>
-
-            <article class="message is-danger" x-show="error != ''">
-                <div class="message-body" x-text="error"></div>
-            </article>
-            <form @submit.prevent="addInstance">
-                <div class="field">
-                    <label class="label">Name</label>
-                    <div class="control">
-                        <input class="input" x-model="smName" type="text" placeholder="Dev">
-                    </div>
+                    <a href="https://kadalu.tech" class="navbar-item">
+                        kadalu.tech
+                    </a>
                 </div>
 
-                <div class="field">
-                    <label class="label">URL</label>
-                    <div class="control">
-                        <input class="input" x-model="smUrl" type="text" placeholder="http://localhost:3000">
-                    </div>
-                </div>
-
-                <div class="field is-grouped">
-                    <div class="control">
-                        <input type="submit" class="button is-link" value="Add"/>
-                    </div>
-                    <div class="control">
-                        <button class="button is-link is-light" @click="showAddStorageManager = false">Cancel</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <h1 class="is-size-5 mb-4 px-2" x-show="storageManagers.length > 0">
-            List of instances
-            <button class="button is-primary is-clickable ml-2 is-small"
-                    title="Add a new Storage Manager instance"
-                    @click="showAddStorageManager = true"
-                    x-show="!showAddStorageManager">
-                <span class="icon is-small">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
-                    </svg>
-                </span>
-                <span>Add</span>
-            </button>
-        </h1>
-        <div class="columns">
-            <template x-for="sm in storageManagers">
-                <div class="column is-3">
-                    <div class="card is-clickable m-2" @click="location.href=poolUrl(pool)">
-                        <div class="has-text-right" x-data="{dropdownShowing: false}">
-                            <div class="dropdown is-right" :class="dropdownShowing ? 'is-active' : ''">
-                                <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
-                                <div class="dropdown-menu has-text-left" role="menu">
+                <div class="navbar-end">
+                    <div class="navbar-item">
+                        <div class="buttons">
+                            <a href="/instances" class="button is-light" x-show="urlPath == '/'">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon mr-2">
+                                    <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 006 5.25v13.5a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5V15a.75.75 0 011.5 0v3.75a3 3 0 01-3 3h-6a3 3 0 01-3-3V5.25a3 3 0 013-3h6a3 3 0 013 3V9A.75.75 0 0115 9V5.25a1.5 1.5 0 00-1.5-1.5h-6zm10.72 4.72a.75.75 0 011.06 0l3 3a.75.75 0 010 1.06l-3 3a.75.75 0 11-1.06-1.06l1.72-1.72H9a.75.75 0 010-1.5h10.94l-1.72-1.72a.75.75 0 010-1.06z" clip-rule="evenodd" />
+                                </svg>
+                                Instances
+                            </a>
+                            <div class="dropdown is-right mx-4 my-2" :class="dropdownShow ? 'is-active' : ''" x-show="username">
+                                <div class="dropdown-trigger">
+                                    <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu" @click="dropdownShow = !dropdownShow" @click.outside="dropdownShow = false">
+                                        <span x-text="username"></span>
+                                        <span class="icon is-small">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                            </svg>
+                                        </span>
+                                    </button>
+                                </div>
+                                <div class="dropdown-menu" id="dropdown-menu" role="menu">
                                     <div class="dropdown-content">
-                                        <a class="dropdown-item" @click="deleteInstance(sm.name)" x-html="`<span class='has-text-danger'>${SVG_DELETE}</span> Delete`">
+                                        <a @click="await logout(qparams.get('mgr'))" class="dropdown-item">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon is-small">
+                                                <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 006 5.25v13.5a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5V15a.75.75 0 011.5 0v3.75a3 3 0 01-3 3h-6a3 3 0 01-3-3V5.25a3 3 0 013-3h6a3 3 0 013 3V9A.75.75 0 0115 9V5.25a1.5 1.5 0 00-1.5-1.5h-6zm5.03 4.72a.75.75 0 010 1.06l-1.72 1.72h10.94a.75.75 0 010 1.5H10.81l1.72 1.72a.75.75 0 11-1.06 1.06l-3-3a.75.75 0 010-1.06l3-3a.75.75 0 011.06 0z" clip-rule="evenodd" />
+                                            </svg>
+                                            Logout
                                         </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="card-content">
-                            <div class="media">
-                                <div class="media-left">
-                                    <svg xmlns="http://www.w3.org/2000/svg" x-show="sm.reachable" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon has-text-success">
-                                        <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm.53 5.47a.75.75 0 00-1.06 0l-3 3a.75.75 0 101.06 1.06l1.72-1.72v5.69a.75.75 0 001.5 0v-5.69l1.72 1.72a.75.75 0 101.06-1.06l-3-3z" clip-rule="evenodd" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" x-show="!sm.reachable" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon has-text-danger">
-                                        <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-.53 14.03a.75.75 0 001.06 0l3-3a.75.75 0 10-1.06-1.06l-1.72 1.72V8.25a.75.75 0 00-1.5 0v5.69l-1.72-1.72a.75.75 0 00-1.06 1.06l3 3z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div class="media-content">
-                                    <p class="title is-4" x-text="sm.name" @click="location.href=storageManagerUrl(sm)"></p>
-                                    <p class="subtitle is-6" x-text="sm.url" @click="location.href=storageManagerUrl(sm)"></p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
-            </template>
+            </div>
+        </nav>
+
+        <div class="" style="min-height: 80vh">
+            
+    <section class="hero has-background-info-light is-medium mb-6">
+        <div class="hero-body has-text-centered">
+            <p class="title">
+                One place to manage all your Kadalu Storage pools.
+            </p>
+            <p class="subtitle">
+                100% Open Source, Secured web app that lets you manage your storage pools from any device.
+            </p>
+            <a class="button is-primary" href="/instances">Get Started</a>
+        </div>
+    </section>
+
+    <div class="columns px-6">
+        <div class="column is-4">
+            <div class="p-4">
+                <p class="title">
+                    Secured
+                </p>
+                <p>
+                    API calls initiated by the browser. No data sent to our Servers.
+                </p>
+            </div>
         </div>
 
+        <div class="column is-4">
+            <div class="p-4">
+                <p class="title">
+                    Zero install
+                </p>
+                <p>
+                    Cloud hosted UI lets you get started with Kadalu Storage within minutes.
+                </p>
+            </div>
+        </div>
+
+        <div class="column is-4">
+            <div class="p-4">
+                <p class="title">
+                    100% Open Source
+                </p>
+                <p>
+                    Run Kadalu Storage console locally when required. Source code is available at <a href="https://github.com/kadalu-tech/console">Github</a>.
+                </p>
+            </div>
+        </div>
     </div>
-    <script>
-     var qparams = new URLSearchParams(window.location.search);
-
-     document.addEventListener('alpine:init', () => {
-         Alpine.data('data', () => ({
-             linkName: "storage_managers",
-             showAddStorageManager: false,
-             showAddButton: true,
-             smName: "",
-             smUrl: "",
-             error: "",
-             message: "",
-             storageManagers: [],
-             storageManagerUrl(sm) {
-                 return '/pools?mgr=' + sm.url;
-             },
-             storageManagerStatus(idx) {
-                 fetch(this.storageManagers[idx].url + '/ping')
-                     .then((response) => {
-                         if (response.status === 200) {
-                             this.storageManagers[idx].reachable = true;
-                         } else {
-                             this.storageManagers[idx].reachable = false;
-                         }
-                     });
-             },
-             getStorageManagers() {
-                 var instances = window.localStorage.getItem("storage_managers");
-                 if (!instances) {
-                     this.storageManagers = [];
-                     this.showAddButton = false;
-                     return;
-                 }
-
-                 this.storageManagers = JSON.parse(instances);
-                 for (var i=0; i<this.storageManagers.length; i++) {
-                     this.storageManagerStatus(i);
-                 }
-                 if (this.storageManagers.length === 0) {
-                     this.showAddButton = false;
-                 }
-             },
-             addInstance() {
-                 var obj = this;
-                 if (obj.smName == "") {
-                     obj.error = "Invalid instance name";
-                     return
-                 }
-                 if (obj.smUrl == "") {
-                     obj.error = "Invalid instance URL";
-                     return
-                 }
-                 try {
-                     var url = new URL(obj.smUrl);
-                     obj.smUrl = url.protocol + "//" + url.host;
-                 } catch (error) {
-                     obj.error = "Invalid instance URL";
-                     return;
-                 }
-
-                 for (var i=0; i<obj.storageManagers.length; i++) {
-                     if (obj.storageManagers[i].name.toLowerCase() === obj.smName.toLowerCase()) {
-                         obj.error = "Storage Manager Name already exists"
-                         return
-                     }
-                     if (obj.storageManagers[i].url.toLowerCase() === obj.smUrl.toLowerCase()) {
-                         obj.error = "Storage Manager URL already exists"
-                         return
-                     }
-                 }
-                 obj.error = "";
-                 var instances = window.localStorage.getItem("storage_managers");
-                 if (!instances) instances = "[]";
-                 var data = JSON.parse(instances);
-                 data.unshift({
-                     name: obj.smName,
-                     url: obj.smUrl
-                 });
-                 window.localStorage.setItem("storage_managers", JSON.stringify(data));
-                 obj.getStorageManagers();
-                 obj.smName = "";
-                 obj.smUrl = "";
-                 obj.showAddStorageManager = false;
-                 obj.message = "Storage Manager added successfully!";
-                 obj.showAddButton = true;
-                 setTimeout(function() {
-                     obj.message = "";
-                 }, 5000);
-             },
-             deleteInstance(smName) {
-                 if (!confirm(`Are you sure want to delete ${smName}?`)) {
-                     return;
-                 }
-                 var instances = window.localStorage.getItem("storage_managers");
-                 if (!instances) return;
-
-                 this.storageManagers = JSON.parse(instances).filter(function(value, index, arr){
-                     return value.name != smName;
-                 });
-                 window.localStorage.setItem("storage_managers", JSON.stringify(this.storageManagers));
-                 if (this.storageManagers.length === 0) {
-                     this.showAddButton = false;
-                 }
-                 this.getStorageManagers();
-             }
-         }))
-     })
-    </script>
 
         </div>
         <script>
          var qparams = new URLSearchParams(window.location.search);
+         var urlPath = new URL(window.location).pathname;
         </script>
+        <footer class="footer has-background-grey-darker has-text-white mt-6">
+            <div class="content has-text-centered">
+                <p>
+                    <strong class="has-text-white">Kadalu Storage Console</strong> is designed, built, and backed by <strong><a class="has-text-white" href="https://kadalu.tech">Kadalu Technologies</a></strong>. <br/>Copyright &copy; 2022 Kadalu Technologies Private Limited.
+                </p>
+            </div>
+        </footer>
     </body>
 </html>

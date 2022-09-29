@@ -200,7 +200,7 @@
              isCommonPath: false,
              commonPath: "",
              distributeCount: 1,
-             nodes: ["kadalu-dev"],/* TODO: Load the server list on page reload */
+             nodes: [],
              disperseData: 2,
              disperseRedundancy: 1,
              noStart: false
@@ -323,6 +323,16 @@
              }
 
              return `/data/${this.req.name == '' ? 'VOL' : this.req.name}/s${idx}`;
+         },
+         async init() {
+             const mgr = storageManagerFromCookies(this.mgrUrl);
+             try {
+                 var nodes = await mgr.pool(this.poolName).listNodes();
+                 this.req.nodes = nodes.map((node) => node.name);
+             } catch (error) {
+                 authErrorRedirectHandle(this.mgrUrl, error)
+                 this.req.nodes = [];
+             }
          }
      }))
  });
@@ -457,7 +467,7 @@
                      await mgr.pool(this.poolName).volume(volume.name).start();
                      this.volumes[idx] = await mgr.pool(this.poolName).volume(volume.name).get(true);
                  } catch (error) {
-                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;
                  }
              },
@@ -472,7 +482,7 @@
                      await mgr.pool(this.poolName).volume(volume.name).stop();
                      this.volumes[idx] = await mgr.pool(this.poolName).volume(volume.name).get(true);
                  } catch (error) {
-                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;
                  }
              },
@@ -489,7 +499,7 @@
                          return value.name != volume.name;
                      });
                  } catch (error) {
-                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;
                  }
              },
@@ -498,7 +508,7 @@
                  try {
                      this.volumes = await mgr.pool(this.poolName).listVolumes(true);
                  } catch (error) {
-                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;
                  }
              }

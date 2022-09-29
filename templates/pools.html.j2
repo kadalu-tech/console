@@ -10,36 +10,47 @@
             </ul>
         </nav>
 
-        <div x-show="pools.length == 0 || showCreatePool" class="mb-6">
-            <article class="message is-info">
-                <div class="message-body">
-                    <h3 class="has-text-weight-semibold">Create a new Pool.</h3>
-                    <p x-show="pools.length == 0">No Pools are created.</p>
+        <div x-show="pools.length == 0 && showWelcome" class="columns">
+            <section class="hero column is-8-desktop is-offset-2-desktop">
+                <div class="hero-body has-text-centered">
+                    <p class="title">
+                        No Storage pools yet!
+                    </p>
+                    <p class="subtitle">
+                        Start creating Pools as you wish. Dev, Prod, Staging...
+                    </p>
+                    <button class="button is-primary my-3" @click="showWelcome = false; showCreatePool = true">Create</button>
+                    <p class="help"></p>
+                    <img src="/static/undraw_inspiration_re_ivlv.svg" class="mt-6"/>
                 </div>
-            </article>
-
-            <article class="message is-danger" x-show="error != ''">
-                <div class="message-body" x-text="error"></div>
-            </article>
-            <form @submit.prevent="createPool">
-                <div class="field">
-                    <label class="label">Name</label>
-                    <div class="control">
-                        <input class="input" x-model="poolName" type="text" placeholder="Dev">
-                    </div>
-                </div>
-
-                <div class="field is-grouped">
-                    <div class="control">
-                        <input type="submit" class="button is-link" value="Create"/>
-                    </div>
-                    <div class="control">
-                        <button class="button is-link is-light" @click="showCreatePool = false; poolName = ''">Cancel</button>
-                    </div>
-                </div>
-            </form>
+            </section>
         </div>
-        
+
+        <div class="modal" :class="showCreatePool ? 'is-active' : ''">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Create a Storage Pool</p>
+                    <button class="delete" @click="resetForm()" aria-label="close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <article class="message is-danger" x-show="error != ''">
+                        <div class="message-body" x-text="error"></div>
+                    </article>
+                    <div class="field">
+                        <label class="label">Name</label>
+                        <div class="control">
+                            <input class="input" x-model="poolName" type="text" placeholder="Dev">
+                        </div>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button is-link" @click="createPool()">Create</button>
+                    <button class="button is-link is-light" @click="showCreatePool = false; poolName = '';showWelcome=true">Cancel</button>
+                </footer>
+            </div>
+        </div>
+
         <h1 class="is-size-5 mb-4 px-2" x-show="pools.length > 0">
             List of Pools
             <button class="button is-primary is-small is-clickable ml-2"
@@ -97,6 +108,7 @@
              linkName: "pools",
              mgrUrl: qparams.get("mgr"),
              pools: [],
+             showWelcome: true,
              showCreateButton: true,
              showCreatePool: true,
              poolName: "",

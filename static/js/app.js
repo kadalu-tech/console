@@ -44,6 +44,12 @@ function resetCookiesAndRedirectToLogin(mgrUrl) {
     handleRedirectToLogin(mgrUrl)
 }
 
+function authErrorRedirectHandle(mgrUrl, error) {
+    if (error instanceof StorageManagerAuthError) {
+        resetCookiesAndRedirectToLogin(mgrUrl);
+    }
+}
+
 // Return a SVG with the 16 colored rectangles grid
 // Split UUID string as hex color codes. 1 UUID gives 5 hex colors and
 // two extra chars. So Join same UUID 3 times to get 16 hex colors.

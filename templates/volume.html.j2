@@ -88,7 +88,7 @@
                  try {
                      this.volume = await mgr.pool(this.poolName).volume(this.volumeName).get(true);
                  } catch (error) {
-                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;
                  }
              }

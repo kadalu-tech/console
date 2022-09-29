@@ -111,7 +111,7 @@
                          this.showCreatePool = false;
                      }
                  } catch (error) {
-                     /* TODO: if 401/403 resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     authErrorRedirectHandle(this.mgrUrl, error)
                      this.error = error;
                  }
              },
@@ -134,6 +134,7 @@
                          this.message = "";
                      }, 5000);
                  } catch (error) {
+                     authErrorRedirectHandle(this.mgrUrl, error)
                      this.error = error;
                  }
              },
@@ -146,8 +147,7 @@
                  try {
                      await mgr.pool(pool.name).delete();
                  } catch (error) {
-                     /* TODO: Redirect only if error is 401 or 403 */
-                     resetCookiesAndRedirectToLogin(qparams.get("mgr"));
+                     authErrorRedirectHandle(this.mgrUrl, error);
                  }
 
                  this.pools = this.pools.filter(function(value, index, arr){

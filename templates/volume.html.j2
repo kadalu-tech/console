@@ -5,7 +5,7 @@
     <div x-data="data" x-init="getVolume">
         <nav class="breadcrumb" aria-label="breadcrumbs">
             <ul>
-                <li><a href="/">{% include "partials/icon_home.svg" %}</a></li>
+                <li><a href="/instances">{% include "partials/icon_home.svg" %}</a></li>
                 <li><a :href="'/pools?mgr=' + mgrUrl">Pools</a></li>
                 <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`" x-text="poolName"></a></li>
                 <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`">Volumes</a></li>

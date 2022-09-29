@@ -6,10 +6,10 @@
         <nav class="breadcrumb" aria-label="breadcrumbs">
             <ul>
                 <li><a href="/">{% include "partials/icon_home.svg" %}</a></li>
-                <li><a :href="'/pools?mgr=' + mgr_url">Pools</a></li>
-                <li><a :href="`/volumes?mgr=${mgr_url}&pool=${pool_name}`" x-text="pool_name"></a></li>
-                <li><a :href="`/volumes?mgr=${mgr_url}&pool=${pool_name}`">Volumes</a></li>
-                <li class="is-active"><a href="#" aria-current="page" x-text="volume_name"></a></li>
+                <li><a :href="'/pools?mgr=' + mgrUrl">Pools</a></li>
+                <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`" x-text="poolName"></a></li>
+                <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`">Volumes</a></li>
+                <li class="is-active"><a href="#" aria-current="page" x-text="volumeName"></a></li>
             </ul>
         </nav>
         <nav class="level has-background-primary-light py-4">
@@ -47,24 +47,24 @@
                 <th>Size</th>
                 <th>Inodes</th>
             </tr>
-            <template x-for="dist_group in volume.distribute_groups">
-                <template x-for="storage_unit in dist_group.storage_units">
+            <template x-for="distGroup in volume.distribute_groups">
+                <template x-for="storageUnit in distGroup.storage_units">
                     <tr>
-                        <td x-text="storage_unit.node.name + ':' + storage_unit.port"></td>
-                        <td x-text="storage_unit.path"></td>
-                        <td x-html="storageUnitStateHtml(storage_unit)"></td>
+                        <td x-text="storageUnit.node.name + ':' + storageUnit.port"></td>
+                        <td x-text="storageUnit.path"></td>
+                        <td x-html="storageUnitStateHtml(storageUnit)"></td>
                         <td style="position: relative">
-                            <div x-text="humanize(storage_unit.metrics.size_used_bytes, true) + '/' + humanize(storage_unit.metrics.size_bytes, true)"></div>
-                            <div class="is-size-7 has-text-grey" x-text="`${sizePercentage(storage_unit)}%`"></div>
+                            <div x-text="humanize(storageUnit.metrics.size_used_bytes, true) + '/' + humanize(storageUnit.metrics.size_bytes, true)"></div>
+                            <div class="is-size-7 has-text-grey" x-text="`${sizePercentage(storageUnit)}%`"></div>
                             <div class="number-bar">
-                                <div :style="{width: `${sizePercentage(storage_unit)}%`, 'background-color': numberBarColor(sizePercentage(storage_unit))}" class="number-bar-inner"></div>
+                                <div :style="{width: `${sizePercentage(storageUnit)}%`, 'background-color': numberBarColor(sizePercentage(storageUnit))}" class="number-bar-inner"></div>
                             </div>
                         </td>
                         <td style="position: relative">
-                            <div x-text="humanize(storage_unit.metrics.inodes_used_count) + '/' + humanize(storage_unit.metrics.inodes_count)"></div>
-                            <div class="is-size-7 has-text-grey" x-text="`${inodesPercentage(storage_unit)}%`"></div>
+                            <div x-text="humanize(storageUnit.metrics.inodes_used_count) + '/' + humanize(storageUnit.metrics.inodes_count)"></div>
+                            <div class="is-size-7 has-text-grey" x-text="`${inodesPercentage(storageUnit)}%`"></div>
                             <div class="number-bar">
-                                <div :style="{width: `${inodesPercentage(storage_unit)}%`, 'background-color': numberBarColor(inodesPercentage(storage_unit))}" class="number-bar-inner"></div>
+                                <div :style="{width: `${inodesPercentage(storageUnit)}%`, 'background-color': numberBarColor(inodesPercentage(storageUnit))}" class="number-bar-inner"></div>
                             </div>
                         </td>
                     </tr>
@@ -78,15 +78,15 @@
 
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
-             link_name: "volume",
-             mgr_url: qparams.get("mgr"),
-             pool_name: qparams.get("pool"),
-             volume_name: qparams.get("volume"),
+             linkName: "volume",
+             mgrUrl: qparams.get("mgr"),
+             poolName: qparams.get("pool"),
+             volumeName: qparams.get("volume"),
              volume: {distribute_groups: [], metrics: {}},
              async getVolume() {
-                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
-                     this.volume = await mgr.pool(this.pool_name).volume(this.volume_name).get(true);
+                     this.volume = await mgr.pool(this.poolName).volume(this.volumeName).get(true);
                  } catch (error) {
                      /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
                      this.error = error;

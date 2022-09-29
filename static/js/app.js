@@ -6,10 +6,10 @@ function setCookie(name, value) {
 function listCookies() {
     var cookies = document.cookie.split(';');
     return cookies.map(function (c) {
-        var name_value = c.trim().split("=");
+        var nameValue = c.trim().split("=");
         return {
-            name: name_value[0],
-            value: name_value[1]
+            name: nameValue[0],
+            value: nameValue[1]
         }
     });
 }
@@ -25,23 +25,23 @@ function getCookieValue(name) {
     return null;
 }
 
-function getMgrCookieName(mgr_url, suffix) {
-    return `${encodeURIComponent(mgr_url)}${suffix}`;
+function getMgrCookieName(mgrUrl, suffix) {
+    return `${encodeURIComponent(mgrUrl)}${suffix}`;
 }
 
-function handleRedirectToLogin(mgr_url) {
-    var mgrApiToken = getCookieValue(getMgrCookieName(mgr_url, "-token"));
+function handleRedirectToLogin(mgrUrl) {
+    var mgrApiToken = getCookieValue(getMgrCookieName(mgrUrl, "-token"));
     if (!mgrApiToken) {
-        location.href = `/login?mgr=${mgr_url}`;
+        location.href = `/login?mgr=${mgrUrl}`;
     }
 }
 
-function resetCookiesAndRedirectToLogin(mgr_url) {
-    var mgrApiCookieName = encodeURIComponent(mgr_url);
+function resetCookiesAndRedirectToLogin(mgrUrl) {
+    var mgrApiCookieName = encodeURIComponent(mgrUrl);
     setCookie(`${mgrApiCookieName}-token`, "");
     setCookie(`${mgrApiCookieName}-userid`, "");
     setCookie(`${mgrApiCookieName}-api_key_id`, "");
-    handleRedirectToLogin(mgr_url)
+    handleRedirectToLogin(mgrUrl)
 }
 
 // Return a SVG with the 16 colored rectangles grid
@@ -54,12 +54,12 @@ function uuidThumbmail(str) {
     var uuidStr = str.replace(/-/g, "");
     uuidStr = `${uuidStr}${uuidStr}${uuidStr}`;
     var outstr = '<svg width="400" height="400" class="icon is-medium" viewBox="0 0 400 400">';
-    for (var row_idx=0; row_idx<4; row_idx++) {
-        for (var col_idx = 0; col_idx < 4; col_idx++) {
-            var x = col_idx * 100;
-            var y = row_idx * 100;
-            // row_idx x num_letters x num_cols + col_idx x num_letters
-            var start = row_idx * 6 * 4 + col_idx * 6;
+    for (var rowIdx=0; rowIdx<4; rowIdx++) {
+        for (var colIdx = 0; colIdx < 4; colIdx++) {
+            var x = colIdx * 100;
+            var y = rowIdx * 100;
+            // rowIdx x numLetters x numCols + colIdx x numLetters
+            var start = rowIdx * 6 * 4 + colIdx * 6;
             var col = uuidStr.slice(start, start + 6);
             outstr += `<rect x="${x}" y="${y}" width="100" height="100" style="fill:#${col};stroke-width:0" />`;
         }
@@ -69,7 +69,7 @@ function uuidThumbmail(str) {
 
 function humanize(value, bytes=false) {
     const base = bytes ? 1024 : 1000;
-    const decimal_places = 1;
+    const decimalPlaces = 1;
 
     if (Math.abs(value) < base) {
         return bytes ? `${value} B` : `${value}`;
@@ -80,7 +80,7 @@ function humanize(value, bytes=false) {
           : ['k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
 
     let u = -1;
-    const r = 10**decimal_places;
+    const r = 10**decimalPlaces;
 
     do {
         value /= base;
@@ -88,7 +88,7 @@ function humanize(value, bytes=false) {
     } while (Math.round(Math.abs(value) * r) / r >= base && u < units.length - 1);
 
 
-    return value.toFixed(decimal_places) + ' ' + units[u];
+    return value.toFixed(decimalPlaces) + ' ' + units[u];
 }
 
 function volumeStateHtml(volume) {
@@ -103,19 +103,19 @@ function volumeStateHtml(volume) {
     return `<span class="has-text-danger">${volume.state}, ${volume.metrics.health}</span>`;
 }
 
-function storageUnitStateHtml(storage_unit) {
-    if (storage_unit.metrics.health === "Up") {
-        return `<span class="has-text-success">${storage_unit.metrics.health}</span>`;
+function storageUnitStateHtml(storageUnit) {
+    if (storageUnit.metrics.health === "Up") {
+        return `<span class="has-text-success">${storageUnit.metrics.health}</span>`;
     }
 
-    return `<span class="has-text-danger">${storage_unit.metrics.health}</span>`;
+    return `<span class="has-text-danger">${storageUnit.metrics.health}</span>`;
 }
 
 function volumeType(volume) {
-    var rep_disp = volume.distribute_groups[0].replica_count + volume.distribute_groups[0].disperse_count;
+    var repDisp = volume.distribute_groups[0].replica_count + volume.distribute_groups[0].disperse_count;
 
     var pfx = "";
-    if (volume.distribute_groups.length > 1 &&  rep_disp > 0) {
+    if (volume.distribute_groups.length > 1 &&  repDisp > 0) {
         pfx = "Distributed ";
     }
 
@@ -170,9 +170,9 @@ function poolNodesCount(volumes) {
     for (var i=0; i<volumes.length; i++) {
         for (var j=0; j<volumes[i].distribute_groups.length; j++) {
             for (var k=0; k<volumes[i].distribute_groups[j].storage_units.length; k++) {
-                var node_name = volumes[i].distribute_groups[j].storage_units[k].node.name;
-                if (nodes.indexOf(node_name) === -1) {
-                    nodes.push(node_name);
+                var nodeName = volumes[i].distribute_groups[j].storage_units[k].node.name;
+                if (nodes.indexOf(nodeName) === -1) {
+                    nodes.push(nodeName);
                 }
             }
         }
@@ -196,9 +196,9 @@ function volumeNodesCount(volume) {
 
     for (var j=0; j<volume.distribute_groups.length; j++) {
         for (var k=0; k<volume.distribute_groups[j].storage_units.length; k++) {
-            var node_name = volume.distribute_groups[j].storage_units[k].node.name;
-            if (nodes.indexOf(node_name) === -1) {
-                nodes.push(node_name);
+            var nodeName = volume.distribute_groups[j].storage_units[k].node.name;
+            if (nodes.indexOf(nodeName) === -1) {
+                nodes.push(nodeName);
             }
         }
     }
@@ -263,40 +263,40 @@ function volumeDeleteButton(volume, idx) {
     }
 }
 
-function getLoggedinUsername(mgr_url) {
-    var mgrApiCookieName = encodeURIComponent(mgr_url);
+function getLoggedinUsername(mgrUrl) {
+    var mgrApiCookieName = encodeURIComponent(mgrUrl);
     var user = getCookieValue(`${mgrApiCookieName}-user`);
     if (user) {
-        return `${user} @ ${mgr_url}`;
+        return `${user} @ ${mgrUrl}`;
     }
 
     return user;
 }
 
-function setLoggedinUsername(mgr_url, value) {
-    var mgrApiCookieName = encodeURIComponent(mgr_url);
+function setLoggedinUsername(mgrUrl, value) {
+    var mgrApiCookieName = encodeURIComponent(mgrUrl);
     return setCookie(`${mgrApiCookieName}-user`, value);
 }
 
 function dropdownTrigger() {
-    return `<div class="mt-2 mr-2" @click="dropdown_showing=!dropdown_showing" @click.outside="dropdown_showing=false">
+    return `<div class="mt-2 mr-2" @click="dropdownShowing=!dropdownShowing" @click.outside="dropdownShowing=false">
                 ${SVG_ELLIPSIS}
             </div>`;
 }
 
-async function logout(mgr_url) {
-    var mgr = storageManagerFromCookies(mgr_url)
+async function logout(mgrUrl) {
+    var mgr = storageManagerFromCookies(mgrUrl)
     if (mgr.api_key_id == "") {
-        resetCookiesAndRedirectToLogin(mgr_url);
+        resetCookiesAndRedirectToLogin(mgrUrl);
     }
 
     await mgr.logout();
-    resetCookiesAndRedirectToLogin(mgr_url);
+    resetCookiesAndRedirectToLogin(mgrUrl);
 }
 
-function storageManagerFromCookies(mgr_url) {
-    var token = getCookieValue(getMgrCookieName(mgr_url, "-token"));
-    var user_id = getCookieValue(getMgrCookieName(mgr_url, "-userid"));
-    var api_key_id = getCookieValue(getMgrCookieName(mgr_url, "-api_key_id"));
-    return StorageManager.fromToken(mgr_url, user_id, api_key_id, token);
+function storageManagerFromCookies(mgrUrl) {
+    var token = getCookieValue(getMgrCookieName(mgrUrl, "-token"));
+    var userId = getCookieValue(getMgrCookieName(mgrUrl, "-userid"));
+    var apiKeyId = getCookieValue(getMgrCookieName(mgrUrl, "-api_key_id"));
+    return StorageManager.fromToken(mgrUrl, userId, apiKeyId, token);
 }

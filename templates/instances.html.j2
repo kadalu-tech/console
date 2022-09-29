@@ -2,7 +2,7 @@
 
 {% block page_title %}List of Storage Manager instances{% endblock %}
 {% block body %}
-    <div x-data="data" x-init="getStorageManagers">
+    <div x-data="data" x-init="getStorageManagers" class="p-4">
         <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
             <ul>
                 <li><a href="/">{% include "partials/icon_home.svg" %}</a></li>
@@ -12,7 +12,23 @@
         <article class="message is-success" x-show="message != ''">
             <div class="message-body" x-text="message"></div>
         </article>
-        <div x-show="storageManagers.length == 0 || showAddStorageManager" class="mr-5 mb-6">
+        <div x-show="storageManagers.length == 0 && showWelcome" class="columns">
+            <section class="hero column is-8-desktop is-offset-2-desktop">
+                <div class="hero-body has-text-centered">
+                    <p class="title">
+                        New to Kadalu Storage Console?
+                    </p>
+                    <p class="subtitle">
+                        Start adding Kadalu Storage manager instances.
+                    </p>
+                    <button class="button is-primary my-3" @click="showWelcome = false; showAddStorageManager = true">Add</button>
+                    <p class="help">Run <code>kadalu info</code> to know the URL of a Kadalu Storage instance. <strong>Note</strong>: All instances details are saved in local storage of your browser. The Manager URL added here are not available in other browser instances.</p>
+                    <img src="/static/undraw_delivery_truck_vt6p.svg" class="mt-6"/>
+                </div>
+            </section>
+        </div>
+
+        <div x-show="showAddStorageManager" class="mr-5 mb-6">
             <article class="message is-info">
                 <div class="message-body">
                     <h3 class="has-text-weight-semibold">Add a new Storage Manager instance.</h3>
@@ -43,7 +59,7 @@
                         <input type="submit" class="button is-link" value="Add"/>
                     </div>
                     <div class="control">
-                        <button class="button is-link is-light" @click="showAddStorageManager = false">Cancel</button>
+                        <input type="reset" class="button is-link is-light" @click="showAddStorageManager = false; showWelcome = true" value="Cancel"/>
                     </div>
                 </div>
             </form>
@@ -106,6 +122,7 @@
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
              linkName: "storage_managers",
+             showWelcome: true,
              showAddStorageManager: false,
              showAddButton: true,
              smName: "",

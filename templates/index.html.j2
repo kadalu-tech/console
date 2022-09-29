@@ -1,105 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Kadalu Storage Manager</title>
-        <link rel="stylesheet" href="/static/css/stylesheet.css">
-        <script defer src="/static/js/alpinejs@3.10.2.js"></script>
-    </head>
-    <body>
-        <nav class="navbar is-primary" role="navigation" aria-label="main navigation" x-data="{menuShow: false}">
-            <div class="navbar-brand">
-                <a class="navbar-item" href="/">
-                    <img src="/static/logo.png" style="height:70px;"/>
-                </a>
+{% extends "layouts/default.html.j2" %}
 
-                <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample" @click="menuShow = !menuShow" :class="menuShow ? 'is-active' : ''">
-                    <span aria-hidden="true"></span>
-                    <span aria-hidden="true"></span>
-                    <span aria-hidden="true"></span>
-                </a>
-            </div>
+{% block page_title %}Home{% endblock %}
+{% block body %}
+    <section class="hero has-background-info-light is-medium mb-6">
+        <div class="hero-body has-text-centered">
+            <p class="title">
+                One place to manage all your Kadalu Storage pools.
+            </p>
+            <p class="subtitle">
+                100% Open Source, Secured web app that lets you manage your storage pools from any device.
+            </p>
+            <a class="button is-primary" href="/instances">Get Started</a>
+        </div>
+    </section>
 
-            <div id="navbarBasicExample" class="navbar-menu" :class="menuShow ? 'is-active' : ''">
-                <div class="navbar-start">
-                    <a href="/" class="navbar-item">
-                        Home
-                    </a>
-
-                    <a href="https://kadalu.tech" class="navbar-item">
-                        kadalu.tech
-                    </a>
-                </div>
-
-                <div class="navbar-end">
-                    <div class="navbar-item">
-                        <div class="buttons">
-                            <a href="/instances" class="button is-light">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon mr-2">
-                                    <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 006 5.25v13.5a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5V15a.75.75 0 011.5 0v3.75a3 3 0 01-3 3h-6a3 3 0 01-3-3V5.25a3 3 0 013-3h6a3 3 0 013 3V9A.75.75 0 0115 9V5.25a1.5 1.5 0 00-1.5-1.5h-6zm10.72 4.72a.75.75 0 011.06 0l3 3a.75.75 0 010 1.06l-3 3a.75.75 0 11-1.06-1.06l1.72-1.72H9a.75.75 0 010-1.5h10.94l-1.72-1.72a.75.75 0 010-1.06z" clip-rule="evenodd" />
-                                </svg>
-                                Instances
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </nav>
-
-        <section class="hero has-background-info-light is-medium mb-6">
-            <div class="hero-body has-text-centered">
+    <div class="columns px-6">
+        <div class="column is-4">
+            <div class="p-4">
                 <p class="title">
-                    One place to manage all your Kadalu Storage pools.
+                    Secured
                 </p>
-                <p class="subtitle">
-                    100% Open Source, Secured web app that lets you manage your storage pools from any device.
+                <p>
+                    API calls initiated by the browser. No data sent to our Servers.
                 </p>
-                <a class="button is-primary" href="/instances">Get Started</a>
-            </div>
-        </section>
-
-        <div class="columns px-6">
-            <div class="column is-4">
-                <div class="p-4">
-                    <p class="title">
-                        Secured
-                    </p>
-                    <p>
-                        API calls initiated by the browser. No data sent to our Servers.
-                    </p>
-                </div>
-            </div>
-
-            <div class="column is-4">
-                <div class="p-4">
-                    <p class="title">
-                        Zero install
-                    </p>
-                    <p>
-                        Cloud hosted UI lets you get started with Kadalu Storage within minutes.
-                    </p>
-                </div>
-            </div>
-
-            <div class="column is-4">
-                <div class="p-4">
-                    <p class="title">
-                        100% Open Source
-                    </p>
-                    <p>
-                        Run Kadalu Storage console locally when required. Source code is available at <a href="https://github.com/kadalu-tech/console">Github</a>.
-                    </p>
-                </div>
             </div>
         </div>
-        <footer class="footer has-background-grey-darker has-text-white mt-6">
-            <div class="content has-text-centered">
+
+        <div class="column is-4">
+            <div class="p-4">
+                <p class="title">
+                    Zero install
+                </p>
                 <p>
-                    <strong class="has-text-white">Kadalu Storage Console</strong> is designed, built, and backed by <strong><a class="has-text-white" href="https://kadalu.tech">Kadalu Technologies</a></strong>. <br/>Copyright &copy; 2022 Kadalu Technologies Private Limited.
+                    Cloud hosted UI lets you get started with Kadalu Storage within minutes.
                 </p>
             </div>
-        </footer>
-    </body>
-</html>
+        </div>
+
+        <div class="column is-4">
+            <div class="p-4">
+                <p class="title">
+                    100% Open Source
+                </p>
+                <p>
+                    Run Kadalu Storage console locally when required. Source code is available at <a href="https://github.com/kadalu-tech/console">Github</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

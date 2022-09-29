@@ -3448,7 +3448,7 @@ button.dropdown-item {
 
 .navbar {
   background-color: white;
-  min-height: 3.25rem;
+  min-height: 4.25rem;
   position: relative;
   z-index: 30; }
   .navbar.is-white {
@@ -3904,7 +3904,7 @@ button.dropdown-item {
   .navbar > .container {
     align-items: stretch;
     display: flex;
-    min-height: 3.25rem;
+    min-height: 4.25rem;
     width: 100%; }
   .navbar.has-shadow {
     box-shadow: 0 2px 0 0 whitesmoke; }
@@ -3922,17 +3922,17 @@ button.dropdown-item {
 
 html.has-navbar-fixed-top,
 body.has-navbar-fixed-top {
-  padding-top: 3.25rem; }
+  padding-top: 4.25rem; }
 html.has-navbar-fixed-bottom,
 body.has-navbar-fixed-bottom {
-  padding-bottom: 3.25rem; }
+  padding-bottom: 4.25rem; }
 
 .navbar-brand,
 .navbar-tabs {
   align-items: stretch;
   display: flex;
   flex-shrink: 0;
-  min-height: 3.25rem; }
+  min-height: 4.25rem; }
 
 .navbar-brand a.navbar-item:focus, .navbar-brand a.navbar-item:hover {
   background-color: transparent; }
@@ -3952,9 +3952,9 @@ body.has-navbar-fixed-bottom {
   border: none;
   cursor: pointer;
   display: block;
-  height: 3.25rem;
+  height: 4.25rem;
   position: relative;
-  width: 3.25rem;
+  width: 4.25rem;
   margin-left: auto; }
   .navbar-burger span {
     background-color: currentColor;
@@ -4012,7 +4012,7 @@ a.navbar-item,
   flex-grow: 0;
   flex-shrink: 0; }
   .navbar-item img {
-    max-height: 1.75rem; }
+    max-height: 2.75rem; }
   .navbar-item.has-dropdown {
     padding: 0; }
   .navbar-item.is-expanded {
@@ -4020,7 +4020,7 @@ a.navbar-item,
     flex-shrink: 1; }
   .navbar-item.is-tab {
     border-bottom: 1px solid transparent;
-    min-height: 3.25rem;
+    min-height: 4.25rem;
     padding-bottom: calc(0.5rem - 1px); }
     .navbar-item.is-tab:focus, .navbar-item.is-tab:hover {
       background-color: transparent;
@@ -4091,15 +4091,15 @@ a.navbar-item,
     top: 0; }
   .navbar.is-fixed-top .navbar-menu, .navbar.is-fixed-top-touch .navbar-menu {
     -webkit-overflow-scrolling: touch;
-    max-height: calc(100vh - 3.25rem);
+    max-height: calc(100vh - 4.25rem);
     overflow: auto; }
 
   html.has-navbar-fixed-top-touch,
   body.has-navbar-fixed-top-touch {
-    padding-top: 3.25rem; }
+    padding-top: 4.25rem; }
   html.has-navbar-fixed-bottom-touch,
   body.has-navbar-fixed-bottom-touch {
-    padding-bottom: 3.25rem; } }
+    padding-bottom: 4.25rem; } }
 @media screen and (min-width: 1024px) {
   .navbar,
   .navbar-menu,
@@ -4109,7 +4109,7 @@ a.navbar-item,
     display: flex; }
 
   .navbar {
-    min-height: 3.25rem; }
+    min-height: 4.25rem; }
     .navbar.is-spaced {
       padding: 1rem 2rem; }
       .navbar.is-spaced .navbar-start,
@@ -4233,16 +4233,16 @@ a.navbar-item,
 
   html.has-navbar-fixed-top-desktop,
   body.has-navbar-fixed-top-desktop {
-    padding-top: 3.25rem; }
+    padding-top: 4.25rem; }
   html.has-navbar-fixed-bottom-desktop,
   body.has-navbar-fixed-bottom-desktop {
-    padding-bottom: 3.25rem; }
+    padding-bottom: 4.25rem; }
   html.has-spaced-navbar-fixed-top,
   body.has-spaced-navbar-fixed-top {
-    padding-top: 5.25rem; }
+    padding-top: 6.25rem; }
   html.has-spaced-navbar-fixed-bottom,
   body.has-spaced-navbar-fixed-bottom {
-    padding-bottom: 5.25rem; }
+    padding-bottom: 6.25rem; }
 
   a.navbar-item.is-active,
   .navbar-link.is-active {
@@ -4254,7 +4254,7 @@ a.navbar-item,
   .navbar-item.has-dropdown:focus .navbar-link, .navbar-item.has-dropdown:hover .navbar-link, .navbar-item.has-dropdown.is-active .navbar-link {
     background-color: #fafafa; } }
 .hero.is-fullheight-with-navbar {
-  min-height: calc(100vh - 3.25rem); }
+  min-height: calc(100vh - 4.25rem); }
 
 .pagination {
   font-size: 1rem;

@@ -118,7 +118,7 @@
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
              linkName: "storage_managers",
-             showWelcome: true,
+             showWelcome: false,
              showAddStorageManager: false,
              showAddButton: true,
              smName: "",
@@ -151,6 +151,7 @@
                  if (!instances) {
                      this.storageManagers = [];
                      this.showAddButton = false;
+                     this.showWelcome = true;
                      return;
                  }
 
@@ -160,6 +161,7 @@
                  }
                  if (this.storageManagers.length === 0) {
                      this.showAddButton = false;
+                     this.showWelcome = true;
                  }
              },
              addInstance() {

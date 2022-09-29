@@ -28,42 +28,38 @@
             </section>
         </div>
 
-        <div x-show="showAddStorageManager" class="mr-5 mb-6">
-            <article class="message is-info">
-                <div class="message-body">
-                    <h3 class="has-text-weight-semibold">Add a new Storage Manager instance.</h3>
-                    All instances details are saved in local storage of your browser. The Manager URL added here are not available in other browser instances. API calls to get Storage Pools and Volumes information are initiated from the browser and no information is shared with us.
-                </div>
-            </article>
+        <div class="modal" :class="showAddStorageManager ? 'is-active' : ''">
+            <div class="modal-background"></div>
+                <div class="modal-card">
+                    <header class="modal-card-head">
+                        <p class="modal-card-title">Add a new Storage Manager instance</p>
+                        <button class="delete" @click="resetForm()" aria-label="close"></button>
+                    </header>
+                    <section class="modal-card-body">
+                        <article class="message is-danger" x-show="error != ''">
+                            <div class="message-body" x-text="error"></div>
+                        </article>
+                        <div class="field">
+                            <label class="label">Name</label>
+                            <div class="control">
+                                <input class="input" x-model="smName" type="text" placeholder="Dev">
+                            </div>
+                        </div>
 
-            <article class="message is-danger" x-show="error != ''">
-                <div class="message-body" x-text="error"></div>
-            </article>
-            <form @submit.prevent="addInstance">
-                <div class="field">
-                    <label class="label">Name</label>
-                    <div class="control">
-                        <input class="input" x-model="smName" type="text" placeholder="Dev">
-                    </div>
+                        <div class="field">
+                            <label class="label">URL</label>
+                            <div class="control">
+                                <input class="input" x-model="smUrl" type="text" placeholder="http://localhost:3000">
+                            </div>
+                        </div>
+                    </section>
+                    <footer class="modal-card-foot">
+                        <button class="button is-link" @click="addInstance()">Add</button>
+                        <button class="button is-link is-light" @click="resetForm()">Cancel</button>
+                    </footer>
                 </div>
-
-                <div class="field">
-                    <label class="label">URL</label>
-                    <div class="control">
-                        <input class="input" x-model="smUrl" type="text" placeholder="http://localhost:3000">
-                    </div>
-                </div>
-
-                <div class="field is-grouped">
-                    <div class="control">
-                        <input type="submit" class="button is-link" value="Add"/>
-                    </div>
-                    <div class="control">
-                        <input type="reset" class="button is-link is-light" @click="showAddStorageManager = false; showWelcome = true" value="Cancel"/>
-                    </div>
-                </div>
-            </form>
         </div>
+
         <h1 class="is-size-5 mb-4 px-2" x-show="storageManagers.length > 0">
             List of instances
             <button class="button is-primary is-clickable ml-2 is-small"
@@ -130,6 +126,13 @@
              error: "",
              message: "",
              storageManagers: [],
+             resetForm() {
+                 this.showAddStorageManager = false;
+                 this.showWelcome = true;
+                 this.smName = '';
+                 this.smUrl = '';
+                 this.error = '';
+             },
              storageManagerUrl(sm) {
                  return '/pools?mgr=' + sm.url;
              },

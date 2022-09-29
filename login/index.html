@@ -20,7 +20,7 @@
                                 <div class="message-body" x-text="error"></div>
                             </article>
                             <p class="has-text-centered">Login to Kadalu Storage Manager.</p>
-                            <p class="has-text-centered"><span class="tag is-warning" x-text="mgr_url"></span></p>
+                            <p class="has-text-centered"><span class="tag is-warning" x-text="mgrUrl"></span></p>
                             <form @submit.prevent="onLogin">
                                 <div class="field">
                                     <label class="label">Username</label>
@@ -68,10 +68,10 @@
 
          document.addEventListener('alpine:init', () => {
              Alpine.data('data', () => ({
-                 link_name: "login",
+                 linkName: "login",
                  username: "",
                  password: "",
-                 mgr_url: qparams.get("mgr"),
+                 mgrUrl: qparams.get("mgr"),
                  error: "",
                  async onLogin() {
                      if (this.username.trim() == "") {
@@ -83,12 +83,12 @@
                          this.error = "Password is empty";
                          return
                      }
-                     const mgr = new StorageManager(this.mgr_url);
+                     const mgr = new StorageManager(this.mgrUrl);
                      try {
-                         const api_key = await mgr.generateApiKey(this.username, this.password);
-                         setCookie(`${mgrApiCookieName}-token`, api_key.token);
-                         setCookie(`${mgrApiCookieName}-userid`, api_key.user_id);
-                         setCookie(`${mgrApiCookieName}-api_key_id`, api_key.id);
+                         const apiKey = await mgr.generateApiKey(this.username, this.password);
+                         setCookie(`${mgrApiCookieName}-token`, apiKey.token);
+                         setCookie(`${mgrApiCookieName}-userid`, apiKey.user_id);
+                         setCookie(`${mgrApiCookieName}-api_key_id`, apiKey.id);
                          setLoggedinUsername(qparams.get("mgr"), this.username);
                          location.href = `/pools?mgr=${qparams.get("mgr")}`;
                      } catch (Exception) {

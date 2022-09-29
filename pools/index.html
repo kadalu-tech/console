@@ -23,11 +23,11 @@
                 </div>
             </div>
 
-            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdown_show: false}">
+            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdownShow: false}">
                 <div class="level-item">
-                    <div class="dropdown is-right mx-4 my-2" :class="dropdown_show ? 'is-active' : ''" x-show="username">
+                    <div class="dropdown is-right mx-4 my-2" :class="dropdownShow ? 'is-active' : ''" x-show="username">
                         <div class="dropdown-trigger">
-                            <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu" @click="dropdown_show = !dropdown_show" @click.outside="dropdown_show = false">
+                            <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu" @click="dropdownShow = !dropdownShow" @click.outside="dropdownShow = false">
                                 <span x-text="username"></span>
                                 <span class="icon is-small">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -63,7 +63,7 @@
             </ul>
         </nav>
 
-        <div x-show="pools.length == 0 || show_create_pool" class="mb-6">
+        <div x-show="pools.length == 0 || showCreatePool" class="mb-6">
             <article class="message is-info">
                 <div class="message-body">
                     <h3 class="has-text-weight-semibold">Create a new Pool.</h3>
@@ -78,7 +78,7 @@
                 <div class="field">
                     <label class="label">Name</label>
                     <div class="control">
-                        <input class="input" x-model="pool_name" type="text" placeholder="Dev">
+                        <input class="input" x-model="poolName" type="text" placeholder="Dev">
                     </div>
                 </div>
 
@@ -87,7 +87,7 @@
                         <input type="submit" class="button is-link" value="Create"/>
                     </div>
                     <div class="control">
-                        <button class="button is-link is-light" @click="show_create_pool = false; pool_name = ''">Cancel</button>
+                        <button class="button is-link is-light" @click="showCreatePool = false; poolName = ''">Cancel</button>
                     </div>
                 </div>
             </form>
@@ -97,8 +97,8 @@
             List of Pools
             <button class="button is-primary is-small is-clickable ml-2"
                     title="Create a Pool"
-                    @click="show_create_pool = true"
-                    x-show="show_create_button">
+                    @click="showCreatePool = true"
+                    x-show="showCreateButton">
                 <span class="icon is-small">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
@@ -112,8 +112,8 @@
             <template x-for="(pool, idx) in pools">
                 <div class="column is-4-tablet is-3-widescreen">
                     <div class="card is-clickable">
-                        <div class="has-text-right" x-data="{dropdown_showing: false}">
-                            <div class="dropdown is-right" :class="dropdown_showing ? 'is-active' : ''">
+                        <div class="has-text-right" x-data="{dropdownShowing: false}">
+                            <div class="dropdown is-right" :class="dropdownShowing ? 'is-active' : ''">
                                 <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
                                 <div class="dropdown-menu has-text-left" role="menu">
                                     <div class="dropdown-content">
@@ -147,21 +147,21 @@
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
              error: "",
-             link_name: "pools",
-             mgr_url: qparams.get("mgr"),
+             linkName: "pools",
+             mgrUrl: qparams.get("mgr"),
              pools: [],
-             show_create_button: true,
-             show_create_pool: true,
-             pool_name: "",
+             showCreateButton: true,
+             showCreatePool: true,
+             poolName: "",
              poolUrl(pool) {
-                 return '/volumes?mgr=' + this.mgr_url + '&pool=' + pool.name;
+                 return '/volumes?mgr=' + this.mgrUrl + '&pool=' + pool.name;
              },
              async init() {
-                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
                      this.pools = await mgr.listPools();
                      if (this.pools.length > 0) {
-                         this.show_create_pool = false;
+                         this.showCreatePool = false;
                      }
                  } catch (error) {
                      /* TODO: if 401/403 resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
@@ -169,20 +169,20 @@
                  }
              },
              async createPool() {
-                 if (this.pool_name.trim() == "") {
+                 if (this.poolName.trim() == "") {
                      this.error = "Pool name is empty";
                      return
                  }
 
-                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
-                     await mgr.createPool(this.pool_name);
+                     await mgr.createPool(this.poolName);
                      this.pools = await mgr.listPools();
-                     this.pool_name = "";
+                     this.poolName = "";
                      this.error = "";
-                     this.show_create_pool = false;
+                     this.showCreatePool = false;
                      this.message = "Pool added successfully!";
-                     this.show_create_button = true;
+                     this.showCreateButton = true;
                      setTimeout(function() {
                          this.message = "";
                      }, 5000);
@@ -195,7 +195,7 @@
                  if (!confirm(`Are you sure want to delete the Pool "${pool.name}"?`)) {
                      return;
                  }
-                 const mgr = storageManagerFromCookies(this.mgr_url);
+                 const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
                      await mgr.pool(pool.name).delete();
                  } catch (error) {

@@ -23,11 +23,11 @@
                 </div>
             </div>
 
-            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdown_show: false}">
+            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdownShow: false}">
                 <div class="level-item">
-                    <div class="dropdown is-right mx-4 my-2" :class="dropdown_show ? 'is-active' : ''" x-show="username">
+                    <div class="dropdown is-right mx-4 my-2" :class="dropdownShow ? 'is-active' : ''" x-show="username">
                         <div class="dropdown-trigger">
-                            <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu" @click="dropdown_show = !dropdown_show" @click.outside="dropdown_show = false">
+                            <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu" @click="dropdownShow = !dropdownShow" @click.outside="dropdownShow = false">
                                 <span x-text="username"></span>
                                 <span class="icon is-small">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -65,7 +65,7 @@
         <article class="message is-success" x-show="message != ''">
             <div class="message-body" x-text="message"></div>
         </article>
-        <div x-show="storage_managers.length == 0 || show_add_storage_manager" class="mr-5 mb-6">
+        <div x-show="storageManagers.length == 0 || showAddStorageManager" class="mr-5 mb-6">
             <article class="message is-info">
                 <div class="message-body">
                     <h3 class="has-text-weight-semibold">Add a new Storage Manager instance.</h3>
@@ -80,14 +80,14 @@
                 <div class="field">
                     <label class="label">Name</label>
                     <div class="control">
-                        <input class="input" x-model="sm_name" type="text" placeholder="Dev">
+                        <input class="input" x-model="smName" type="text" placeholder="Dev">
                     </div>
                 </div>
 
                 <div class="field">
                     <label class="label">URL</label>
                     <div class="control">
-                        <input class="input" x-model="sm_url" type="text" placeholder="http://localhost:3000">
+                        <input class="input" x-model="smUrl" type="text" placeholder="http://localhost:3000">
                     </div>
                 </div>
 
@@ -96,17 +96,17 @@
                         <input type="submit" class="button is-link" value="Add"/>
                     </div>
                     <div class="control">
-                        <button class="button is-link is-light" @click="show_add_storage_manager = false">Cancel</button>
+                        <button class="button is-link is-light" @click="showAddStorageManager = false">Cancel</button>
                     </div>
                 </div>
             </form>
         </div>
-        <h1 class="is-size-5 mb-4 px-2" x-show="storage_managers.length > 0">
+        <h1 class="is-size-5 mb-4 px-2" x-show="storageManagers.length > 0">
             List of instances
             <button class="button is-primary is-clickable ml-2 is-small"
                     title="Add a new Storage Manager instance"
-                    @click="show_add_storage_manager = true"
-                    x-show="!show_add_storage_manager">
+                    @click="showAddStorageManager = true"
+                    x-show="!showAddStorageManager">
                 <span class="icon is-small">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
@@ -116,11 +116,11 @@
             </button>
         </h1>
         <div class="columns">
-            <template x-for="sm in storage_managers">
+            <template x-for="sm in storageManagers">
                 <div class="column is-3">
                     <div class="card is-clickable m-2" @click="location.href=poolUrl(pool)">
-                        <div class="has-text-right" x-data="{dropdown_showing: false}">
-                            <div class="dropdown is-right" :class="dropdown_showing ? 'is-active' : ''">
+                        <div class="has-text-right" x-data="{dropdownShowing: false}">
+                            <div class="dropdown is-right" :class="dropdownShowing ? 'is-active' : ''">
                                 <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
                                 <div class="dropdown-menu has-text-left" role="menu">
                                     <div class="dropdown-content">
@@ -158,67 +158,67 @@
 
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
-             link_name: "storage_managers",
-             show_add_storage_manager: false,
-             show_add_button: true,
-             sm_name: "",
-             sm_url: "",
+             linkName: "storage_managers",
+             showAddStorageManager: false,
+             showAddButton: true,
+             smName: "",
+             smUrl: "",
              error: "",
              message: "",
-             storage_managers: [],
+             storageManagers: [],
              storageManagerUrl(sm) {
                  return '/pools?mgr=' + sm.url;
              },
              storageManagerStatus(idx) {
-                 fetch(this.storage_managers[idx].url + '/ping')
+                 fetch(this.storageManagers[idx].url + '/ping')
                      .then((response) => {
                          if (response.status === 200) {
-                             this.storage_managers[idx].reachable = true;
+                             this.storageManagers[idx].reachable = true;
                          } else {
-                             this.storage_managers[idx].reachable = false;
+                             this.storageManagers[idx].reachable = false;
                          }
                      });
              },
              getStorageManagers() {
                  var instances = window.localStorage.getItem("storage_managers");
                  if (!instances) {
-                     this.storage_managers = [];
-                     this.show_add_button = false;
+                     this.storageManagers = [];
+                     this.showAddButton = false;
                      return;
                  }
 
-                 this.storage_managers = JSON.parse(instances);
-                 for (var i=0; i<this.storage_managers.length; i++) {
+                 this.storageManagers = JSON.parse(instances);
+                 for (var i=0; i<this.storageManagers.length; i++) {
                      this.storageManagerStatus(i);
                  }
-                 if (this.storage_managers.length === 0) {
-                     this.show_add_button = false;
+                 if (this.storageManagers.length === 0) {
+                     this.showAddButton = false;
                  }
              },
              addInstance() {
                  var obj = this;
-                 if (obj.sm_name == "") {
+                 if (obj.smName == "") {
                      obj.error = "Invalid instance name";
                      return
                  }
-                 if (obj.sm_url == "") {
+                 if (obj.smUrl == "") {
                      obj.error = "Invalid instance URL";
                      return
                  }
                  try {
-                     var url = new URL(obj.sm_url);
-                     obj.sm_url = url.protocol + "//" + url.host;
+                     var url = new URL(obj.smUrl);
+                     obj.smUrl = url.protocol + "//" + url.host;
                  } catch (error) {
                      obj.error = "Invalid instance URL";
                      return;
                  }
 
-                 for (var i=0; i<obj.storage_managers.length; i++) {
-                     if (obj.storage_managers[i].name.toLowerCase() === obj.sm_name.toLowerCase()) {
+                 for (var i=0; i<obj.storageManagers.length; i++) {
+                     if (obj.storageManagers[i].name.toLowerCase() === obj.smName.toLowerCase()) {
                          obj.error = "Storage Manager Name already exists"
                          return
                      }
-                     if (obj.storage_managers[i].url.toLowerCase() === obj.sm_url.toLowerCase()) {
+                     if (obj.storageManagers[i].url.toLowerCase() === obj.smUrl.toLowerCase()) {
                          obj.error = "Storage Manager URL already exists"
                          return
                      }
@@ -228,33 +228,33 @@
                  if (!instances) instances = "[]";
                  var data = JSON.parse(instances);
                  data.unshift({
-                     name: obj.sm_name,
-                     url: obj.sm_url
+                     name: obj.smName,
+                     url: obj.smUrl
                  });
                  window.localStorage.setItem("storage_managers", JSON.stringify(data));
                  obj.getStorageManagers();
-                 obj.sm_name = "";
-                 obj.sm_url = "";
-                 obj.show_add_storage_manager = false;
+                 obj.smName = "";
+                 obj.smUrl = "";
+                 obj.showAddStorageManager = false;
                  obj.message = "Storage Manager added successfully!";
-                 obj.show_add_button = true;
+                 obj.showAddButton = true;
                  setTimeout(function() {
                      obj.message = "";
                  }, 5000);
              },
-             deleteInstance(sm_name) {
-                 if (!confirm(`Are you sure want to delete ${sm_name}?`)) {
+             deleteInstance(smName) {
+                 if (!confirm(`Are you sure want to delete ${smName}?`)) {
                      return;
                  }
                  var instances = window.localStorage.getItem("storage_managers");
                  if (!instances) return;
 
-                 this.storage_managers = JSON.parse(instances).filter(function(value, index, arr){
-                     return value.name != sm_name;
+                 this.storageManagers = JSON.parse(instances).filter(function(value, index, arr){
+                     return value.name != smName;
                  });
-                 window.localStorage.setItem("storage_managers", JSON.stringify(this.storage_managers));
-                 if (this.storage_managers.length === 0) {
-                     this.show_add_button = false;
+                 window.localStorage.setItem("storage_managers", JSON.stringify(this.storageManagers));
+                 if (this.storageManagers.length === 0) {
+                     this.showAddButton = false;
                  }
                  this.getStorageManagers();
              }

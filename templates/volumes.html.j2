@@ -150,7 +150,7 @@
                      await mgr.pool(this.poolName).volume(volume.name).start();
                      this.volumes[idx] = await mgr.pool(this.poolName).volume(volume.name).get(true);
                  } catch (error) {
-                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;
                  }
              },
@@ -165,7 +165,7 @@
                      await mgr.pool(this.poolName).volume(volume.name).stop();
                      this.volumes[idx] = await mgr.pool(this.poolName).volume(volume.name).get(true);
                  } catch (error) {
-                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;
                  }
              },
@@ -182,7 +182,7 @@
                          return value.name != volume.name;
                      });
                  } catch (error) {
-                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;
                  }
              },
@@ -191,7 +191,7 @@
                  try {
                      this.volumes = await mgr.pool(this.poolName).listVolumes(true);
                  } catch (error) {
-                     /* TODO: resetCookiesAndRedirectToLogin(qparams.get("mgr")); */
+                     authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;
                  }
              }

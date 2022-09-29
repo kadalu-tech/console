@@ -1,0 +1,255 @@
+<form x-data="volume_create_data" @submit.prevent="createVolume">
+    <div class="columns">
+        <div class="column is-8">
+            <div class="field">
+                <label class="label">Name</label>
+                <div class="control">
+                    <input class="input" x-model="req.name" type="text"
+                           placeholder="data">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Type</label>
+                <div class="control">
+                    <div class="select">
+                        <select x-model="req.type">
+                            <option>Distribute</option>
+                            <option>Replica 2</option>
+                            <option>Replica 3</option>
+                            <option>Disperse</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field" x-show="req.type == 'Disperse'">
+                <label class="label">Data</label>
+                <div class="select">
+                    <select x-model="req.disperseData">
+                        <template x-for="count in [2, 4, 5, 6, 7, 8, 9, 10]">
+                            <option x-text="count"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <div class="field" x-show="req.type == 'Disperse'">
+                <label class="label">Redundancy</label>
+                <div class="select">
+                    <select x-model="req.disperseRedundancy">
+                        <template x-for="count in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]">
+                            <option x-text="count"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="checkbox">
+                    <input type="checkbox" x-model="req.isCommonPath">
+                    Common path for Storage units
+                </label>
+            </div>
+            <div class="field" x-show="req.isCommonPath">
+                <label class="label">Common Path</label>
+                <div class="control">
+                    <input class="input" x-model="req.commonPath" type="text" placeholder="">
+                </div>
+            </div>
+
+            <template x-for="distGrp in req.distributeCount">
+                <div class="has-background-info-light p-2 mb-2">
+                    <p class="is-size-6">Distribute Group <span x-text="distGrp"></span></p>
+                    <template x-for="idx in getDistributeSize()">
+                        <div class="field has-addons">
+                            <div class="control">
+                                <div class="select">
+                                    <select :id="`storage-unit-node-${getStorageUnitId(distGrp-1, idx-1)}`" @select="req.ts=new Date()">
+                                        <template x-for="node in req.nodes">
+                                            <option x-text="node"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="control">
+                                <input class="input" :id="`storage-unit-port-${getStorageUnitId(distGrp-1, idx-1)}`"
+                                       type="text"
+                                       @input="req.ts=new Date()"
+                                       placeholder="Port: auto">
+                            </div>
+                            <div class="control">
+                                <input class="input" :id="`storage-unit-path-${getStorageUnitId(distGrp-1, idx-1)}`"
+                                       type="text"
+                                       @input="req.ts=new Date()"
+                                       :class="req.isCommonPath ? 'is-static' : ''"
+                                       :placeholder="getStorageUnitPlaceholder(idx)">
+                            </div>
+                        </div>
+                    </template>
+                    <div class="has-text-right" x-show="distGrp == req.distributeCount">
+                        <a class="button" @click="req.distributeCount++">+</a>
+                    </div>
+                </div>
+            </template>
+
+            <div class="">
+                <div class="field">
+                    <label class="checkbox">
+                        <input type="checkbox" x-model="req.noStart">
+                        Do not start the Volume after create
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="column is-4">
+            <div class="container has-background-warning-light p-4" x-html="reqSummary()"></div>
+        </div>
+    </div>
+    <div class="">
+        <div class="field is-grouped">
+            <div class="control">
+                <input type="submit" class="button is-link" value="Create"/>
+            </div>
+            <div class="control">
+                <button class="button is-link is-light" @click="showCreateVolume = false; req.name = ''">Cancel</button>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+ document.addEventListener('alpine:init', () => {
+     Alpine.data('volume_create_data', () => ({
+         req: {
+             ts: "",
+             name: "",
+             type: "Distribute",
+             isCommonPath: false,
+             commonPath: "",
+             distributeCount: 1,
+             nodes: [],
+             disperseData: 2,
+             disperseRedundancy: 1,
+             noStart: false
+         },
+         getTypeName() {
+             var pfx = '';
+             if (this.req.type != 'Distribute' && this.req.distributeCount > 1) {
+                 pfx = 'Distributed ';
+             }
+
+             var sfx = '';
+             if (this.req.type == 'Disperse') {
+                 sfx = `(data: ${this.req.disperseData}, redundancy: ${this.req.disperseRedundancy})`;
+             }
+             return `${pfx}${this.req.type}${sfx}`;
+         },
+         reqSummary() {
+             summary = `<p class="is-size-4">Summary</p>
+                            <p class="is-hidden">${this.req.ts}</p>
+                            <p class="">Name: ${this.poolName}/${this.req.name == '' ? '-' : this.req.name}</p>
+                            <p class="">Type: ${this.getTypeName()}</p>
+                            <p class="">Use common path: ${this.req.isCommonPath ? `Yes (${this.req.commonPath})` : 'No'}</p>
+                            <p class="">Start Volume after create: ${this.req.noStart ? 'No' : 'Yes'}</p>
+                            <p class="">Number of distribute groups: ${this.req.distributeCount}</p>`;
+             
+             for (var i=0; i<this.req.distributeCount; i++) {
+                 summary += `<p>Distribute group ${i+1}</p>`;
+                 for (var j=0; j<this.getDistributeSize(); j++) {
+                     var idx = i*this.getDistributeSize() + j + 1;
+                     summary += `<p class="ml-2">${this.getStorageUnitNode(idx)}${this.getStorageUnitPort(idx)}:${this.getStorageUnitPath(idx)}</p>`
+                 }
+             }
+             return summary;
+         },
+         getReplicaCount() {
+             if (this.req.type == 'Replica 2') {
+                 return 2;
+             }
+             if (this.req.type == 'Replica 3') {
+                 return 3;
+             }
+             return 0;
+         },
+         getDisperseCount() {
+             if (this.req.type != 'Disperse') {
+                 return 0;
+             }
+
+             return parseInt(this.req.disperseData, 10) + this.getRedundancyCount()
+         },
+         getRedundancyCount() {
+             if (this.req.type != 'Disperse') {
+                 return 0;
+             }
+
+             return parseInt(this.req.disperseRedundancy, 10);
+         },
+         getStorageUnitPath(idx) {
+             if (this.req.isCommonPath) {
+                 return this.req.commonPath;
+             }
+             return document.getElementById(`storage-unit-path-${idx}`).value;
+         },
+         getStorageUnitPort(idx) {
+             var port = document.getElementById(`storage-unit-port-${idx}`).value;
+             if (port == '') {
+                 return 0;
+             }
+
+             return parseInt(port, 10);
+         },
+         getStorageUnitNode(idx) {
+             return document.getElementById(`storage-unit-node-${idx}`).value
+         },
+         createVolume() {
+             var req = {
+                 name: this.req.name,
+                 distribute_groups: [],
+                 no_start: this.req.noStart
+             }
+             var distGrpSize = this.getDistributeSize();
+             for (var i=0; i<this.req.distributeCount; i++) {
+                 var distGrp = {
+                     replica_count: this.getReplicaCount(),
+                     disperse_count: this.getDisperseCount(),
+                     redundancy_count: this.getRedundancyCount(),
+                     storage_units: [],
+                 };
+                 for (var j=0; j<distGrpSize; j++) {
+                     var idx = i * distGrpSize + j + 1;
+                     distGrp.storage_units.push({
+                         path: this.getStorageUnitPath(idx),
+                         port: this.getStorageUnitPort(idx),
+                         node: {
+                             name: this.getStorageUnitNode(idx)
+                         }
+                     });
+                 }
+
+                 req.distribute_groups.push(distGrp);
+             }
+         },
+         getDistributeSize() {
+             if (this.req.type == "Replica 2") {
+                 return 2;
+             } else if (this.req.type == "Replica 3") {
+                 return 3;
+             } else if (this.req.type == "Disperse") {
+                 return this.getDisperseCount();
+             }
+
+             return 1;
+         },
+         getStorageUnitId(distGrpIdx, storageUnitIdx) {
+             return distGrpIdx * this.getDistributeSize() + storageUnitIdx + 1;
+         },
+         getStorageUnitPlaceholder(idx) {
+             if (this.req.isCommonPath) {
+                 return this.req.commonPath;
+             }
+
+             return `/data/${this.req.name == '' ? 'VOL' : this.req.name}/s${idx}`;
+         }
+     }))
+ });
+</script>

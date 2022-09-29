@@ -23,11 +23,11 @@
                 </div>
             </div>
 
-            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdown_show: false}">
+            <div class="level-right" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdownShow: false}">
                 <div class="level-item">
-                    <div class="dropdown is-right mx-4 my-2" :class="dropdown_show ? 'is-active' : ''" x-show="username">
+                    <div class="dropdown is-right mx-4 my-2" :class="dropdownShow ? 'is-active' : ''" x-show="username">
                         <div class="dropdown-trigger">
-                            <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu" @click="dropdown_show = !dropdown_show" @click.outside="dropdown_show = false">
+                            <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu" @click="dropdownShow = !dropdownShow" @click.outside="dropdownShow = false">
                                 <span x-text="username"></span>
                                 <span class="icon is-small">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

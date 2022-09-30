@@ -145,8 +145,8 @@
         <div class="columns is-multiline">
             <template x-for="(pool, idx) in pools">
                 <div class="column is-4-tablet is-3-widescreen">
-                    <div class="card is-clickable">
-                        <div class="has-text-right" x-data="{dropdownShowing: false}">
+                    <div class="card" style="position: relative">
+                        <div class="has-text-right" style="position:absolute; right: 0" x-data="{dropdownShowing: false}">
                             <div class="dropdown is-right" :class="dropdownShowing ? 'is-active' : ''">
                                 <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
                                 <div class="dropdown-menu has-text-left" role="menu">
@@ -157,16 +157,32 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-content" @click="location.href=poolUrl(pool)">
+                        <div class="card-content">
                             <div class="media">
                                 <div class="media-left">
-                                    <figure class="image is-48x48" x-html="uuidThumbmail(pool.id)">
+                                    <figure class="image is-32x32" x-html="uuidThumbmail(pool.id)">
                                     </figure>
                                 </div>
                                 <div class="media-content">
                                     <p class="title is-4" x-text="pool.name"></p>
                                     <p class="subtitle is-7" x-text="pool.id"></p>
                                 </div>
+                            </div>
+                            <div class="content has-background-light">
+                                <nav class="level p-2">
+                                    <div class="level-item has-text-centered">
+                                        <a :href="volumesUrl(pool)">
+                                            <p class="heading">Volumes</p>
+                                            <p class="title" x-text="pool.volumes_count"></p>
+                                        </a>
+                                    </div>
+                                    <div class="level-item has-text-centered">
+                                        <a :href="nodesUrl(pool)">
+                                            <p class="heading">Nodes</p>
+                                            <p class="title" x-text="pool.nodes_count"></p>
+                                        </a>
+                                    </div>
+                                </nav>
                             </div>
                         </div>               
                     </div>
@@ -188,8 +204,11 @@
              showCreateButton: true,
              showCreatePool: false,
              poolName: "",
-             poolUrl(pool) {
+             volumesUrl(pool) {
                  return '/volumes?mgr=' + this.mgrUrl + '&pool=' + pool.name;
+             },
+             nodesUrl(pool) {
+                 return '/nodes?mgr=' + this.mgrUrl + '&pool=' + pool.name;
              },
              async init() {
                  const mgr = storageManagerFromCookies(this.mgrUrl);

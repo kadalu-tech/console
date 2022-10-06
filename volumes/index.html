@@ -386,13 +386,15 @@
             <div class="level-item has-text-centered">
                 <div>
                     <p class="heading">Volumes</p>
-                    <p class="title is-size-5" x-text="volumes.length"></p>
+                    <p class="title is-size-5" x-text="pool.volumes_count"></p>
                 </div>
             </div>
             <div class="level-item has-text-centered">
                 <div>
-                    <p class="heading">Nodes</p>
-                    <p class="title is-size-5" x-text="poolNodesCount(volumes)"></p>
+                    <a :href="nodesUrl(mgrUrl, pool)">
+                        <p class="heading">Nodes</p>
+                        <p class="title is-size-5" x-text="pool.nodes_count"></p>
+                    </a>
                 </div>
             </div>
             <div class="level-item has-text-centered">
@@ -421,8 +423,8 @@
                     title="Create a Volume"
                     @click="showCreateVolume = true"
                     x-show="showCreateButton">
-                <span class="icon is-small">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <span class="">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon is-small">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
                     </svg>
                 </span>
@@ -501,6 +503,8 @@
              showCreateButton: true,
              showCreateVolume: false,
              showWelcome: false,
+             error: "",
+             pool: {},
              volumeUrl(volume) {
                  return `/volume?mgr=${this.mgrUrl}&pool=${this.poolName}&volume=${volume.name}`;
              },
@@ -509,7 +513,7 @@
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
                      await mgr.pool(this.poolName).volume(volume.name).start();
-                     this.volumes[idx] = await mgr.pool(this.poolName).volume(volume.name).get(true);
+                     this.volumes[idx] = await (mgr.pool(this.poolName).volume(volume.name)).get(true);
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;
@@ -554,6 +558,7 @@
                      if (this.volumes.length === 0) {
                          this.showWelcome = true;
                      }
+                     this.pool = await mgr.pool(this.poolName).get();
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;

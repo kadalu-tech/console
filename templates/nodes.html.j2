@@ -1,0 +1,196 @@
+{% extends "layouts/default.html.j2" %}
+
+{% block page_title %}Nodes List{% endblock %}
+{% block body %}
+    <div x-data="data" class="p-4">
+        <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="/instances">{% include "partials/icon_home.svg" %}</a></li>
+                <li><a :href="'/pools?mgr=' + mgrUrl">Pools</a></li>
+                <li><a :href="`/nodes?mgr=${mgrUrl}&pool=${poolName}`" x-text="poolName"></a></li>
+                <li class="is-active"><a href="#" aria-current="page">Nodes</a></li>
+            </ul>
+        </nav>
+
+        <div x-show="nodes.length == 0 && showWelcome" class="columns">
+            <section class="hero column is-8-desktop is-offset-2-desktop">
+                <div class="hero-body has-text-centered">
+                    <p class="title">
+                        No nodes added to the Storage Pool!
+                    </p>
+                    <p class="subtitle">
+                        Start adding nodes.
+                    </p>
+                    <button class="button is-primary my-3" @click="showWelcome = false; showCreateVolume = true">Add</button>
+                    <p class="help"></p>
+                    <img src="/static/undraw_ideas_re_7twj.svg" class="mt-6"/>
+                </div>
+            </section>
+        </div>
+
+        <div class="modal" :class="showAddNode ? 'is-active' : ''">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Add a node to the Storage Pool</p>
+                    <button class="delete" @click="resetForm()" aria-label="close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <article class="message is-danger" x-show="error != ''">
+                        <div class="message-body" x-text="error"></div>
+                    </article>
+                    <div class="field">
+                        <label class="label">Name</label>
+                        <div class="control">
+                            <input class="input" x-model="nodeName" type="text" placeholder="node1.example.com">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Endpoint</label>
+                        <div class="control">
+                            <input class="input" x-model="endpoint" type="text" placeholder="">
+                        </div>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button is-link" @click="addNode()">Add</button>
+                    <button class="button is-link is-light" @click="showAddNode = false; nodeName = '';showWelcome=true">Cancel</button>
+                </footer>
+            </div>
+        </div>
+
+        <nav class="level has-background-primary-light py-4" x-show="nodes.length > 0">
+            <div class="level-item has-text-centered">
+                <div>
+                    <a :href="volumesUrl(mgrUrl, pool)">
+                        <p class="heading">Volumes</p>
+                        <p class="title is-size-5" x-text="pool.volumes_count"></p>
+                    </a>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                        <p class="heading">Nodes</p>
+                        <p class="title is-size-5" x-text="pool.nodes_count"></p>
+                </div>
+            </div>
+            <!-- <div class="level-item has-text-centered">
+                 <div>
+                 <p class="heading">Storage Units</p>
+                 <p class="title is-size-5" x-text="poolStorageUnitsCount(volumes)"></p>
+                 </div>
+                 </div> -->
+            <!-- <div class="level-item has-text-centered">
+                 <div>
+                 <p class="heading">Utilization</p>
+                 <div class="title is-size-5" style="position: relative">
+                 <div class="px-2" x-text="poolUtilization(volumes)"></div>
+                 <div class="px-2 is-size-7 has-text-grey" x-text="`${poolSizePercentage(volumes)}%`"></div>
+                 <div class="number-bar-in-header">
+                 <div :style="{width: `${poolSizePercentage(volumes)}%`, 'background-color': numberBarColor(poolSizePercentage(volumes))}" class="number-bar-inner"></div>
+                 </div>
+                 </div>
+                 </div>
+                 </div> -->
+        </nav>
+
+        <h1 class="is-size-5 mb-4 px-2"  x-show="nodes.length > 0">
+            List of Nodes
+            <button class="button is-primary is-small is-clickable ml-2"
+                    title="Create a Volume"
+                    @click="showAddNode = true"
+                    x-show="showAddButton">
+                <span class="icon is-small">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                    </svg>
+                </span>
+                <span>Add</span>
+            </button>
+        </h1>
+        <div class="columns is-multiline">
+            <template x-for="(node, idx) in nodes">
+                <div class="column is-4-tablet is-3-widescreen">
+                    <div class="card" style="position: relative">
+                        <div class="has-text-right" style="position:absolute; right: 0" x-data="{dropdownShowing: false}">
+                            <div class="dropdown is-right" :class="dropdownShowing ? 'is-active' : ''">
+                                <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
+                                <div class="dropdown-menu has-text-left" role="menu">
+                                    <div class="dropdown-content">
+                                        <a class="dropdown-item" @click="removeNode(idx)">
+                                            <span x-html="nodeRemoveButton(node, idx)"></span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="media">
+                                <div class="media-left">
+                                    <figure class="image is-32x32" x-html="uuidThumbmail(node.id)">
+                                    </figure>
+                                </div>
+                                <div class="media-content">
+                                    <p class="title is-4" x-html="nodeNameAndStatus(node)"></p>
+                                    <p class="subtitle">
+                                        <div class="is-size-7" x-text="node.endpoint"></div>
+                                        <div class="is-size-7" x-text="node.id"></div>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+    <script>
+     var qparams = new URLSearchParams(window.location.search);
+     handleRedirectToLogin(qparams.get("mgr"));
+
+     document.addEventListener('alpine:init', () => {
+         Alpine.data('data', () => ({
+             linkName: "nodes",
+             mgrUrl: qparams.get("mgr"),
+             poolName: qparams.get("pool"),
+             nodeName: "",
+             endpoint: "",
+             nodes: [],
+             showAddButton: true,
+             showAddNode: false,
+             showWelcome: false,
+             error: "",
+             pool: {},
+             async removeNode(idx) {
+                 var node = this.nodes[idx];
+                 if (!confirm(`Are you sure want to remove the Node "${node.name}"?`)) {
+                     return;
+                 }
+                 const mgr = storageManagerFromCookies(this.mgrUrl);
+                 try {
+                     await mgr.pool(this.poolName).node(node.name).remove();
+                     this.nodes = this.nodes.filter(function(value, index, arr){
+                         return value.name != node.name;
+                     });
+                 } catch (error) {
+                     authErrorRedirectHandle(this.mgrUrl, error);
+                     this.error = error;
+                 }
+             },
+             async init() {
+                 const mgr = storageManagerFromCookies(this.mgrUrl);
+                 try {
+                     this.nodes = await mgr.pool(this.poolName).listNodes(true);
+                     if (this.nodes.length === 0) {
+                         this.showWelcome = true;
+                     }
+                     this.pool = await mgr.pool(this.poolName).get();
+                 } catch (error) {
+                     authErrorRedirectHandle(this.mgrUrl, error);
+                     this.error = error;
+                 }
+             }
+         }))
+     })
+    </script>
+{% endblock %}

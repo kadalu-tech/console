@@ -57,8 +57,8 @@
                     title="Create a Pool"
                     @click="showCreatePool = true"
                     x-show="showCreateButton">
-                <span class="icon is-small">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon is-small">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
                     </svg>
                 </span>
@@ -95,13 +95,13 @@
                             <div class="content has-background-light">
                                 <nav class="level p-2">
                                     <div class="level-item has-text-centered">
-                                        <a :href="volumesUrl(pool)">
+                                        <a :href="volumesUrl(mgrUrl, pool)">
                                             <p class="heading">Volumes</p>
                                             <p class="title" x-text="pool.volumes_count"></p>
                                         </a>
                                     </div>
                                     <div class="level-item has-text-centered">
-                                        <a :href="nodesUrl(pool)">
+                                        <a :href="nodesUrl(mgrUrl, pool)">
                                             <p class="heading">Nodes</p>
                                             <p class="title" x-text="pool.nodes_count"></p>
                                         </a>
@@ -128,12 +128,6 @@
              showCreateButton: true,
              showCreatePool: false,
              poolName: "",
-             volumesUrl(pool) {
-                 return '/volumes?mgr=' + this.mgrUrl + '&pool=' + pool.name;
-             },
-             nodesUrl(pool) {
-                 return '/nodes?mgr=' + this.mgrUrl + '&pool=' + pool.name;
-             },
              async init() {
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {

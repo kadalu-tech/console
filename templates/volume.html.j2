@@ -3,15 +3,11 @@
 {% block page_title %}Volume detail{% endblock %}
 {% block body %}
     <div x-data="data" x-init="getVolume" class="p-4">
-        <nav class="breadcrumb" aria-label="breadcrumbs">
-            <ul>
-                <li><a href="/instances">{% include "partials/icon_home.svg" %}</a></li>
-                <li><a :href="'/pools?mgr=' + mgrUrl">Pools</a></li>
-                <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`" x-text="poolName"></a></li>
-                <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`">Volumes</a></li>
-                <li class="is-active"><a href="#" aria-current="page" x-text="volumeName"></a></li>
-            </ul>
-        </nav>
+        {% with %}
+            {% set menus=[{"name": "Pools", "href": "'/pools?mgr=' + mgrUrl"}, {"name": "", "x_text": "poolName", "href": "`/volumes?mgr=${mgrUrl}&pool=${poolName}`"}, {"name": "Volumes", "href": "`/volumes?mgr=${mgrUrl}&pool=${poolName}"}, {"name": "", "x_text": "volumeName"}] %}
+            {% include "partials/breadcrumb.html.j2" %}
+        {% endwith %}
+
         <nav class="level has-background-primary-light py-4">
             <div class="level-item has-text-centered">
                 <div>

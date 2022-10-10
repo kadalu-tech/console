@@ -3,14 +3,10 @@
 {% block page_title %}Volumes List{% endblock %}
 {% block body %}
     <div x-data="data" class="p-4">
-        <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
-            <ul>
-                <li><a href="/instances">{% include "partials/icon_home.svg" %}</a></li>
-                <li><a :href="'/pools?mgr=' + mgrUrl">Pools</a></li>
-                <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`" x-text="poolName"></a></li>
-                <li class="is-active"><a href="#" aria-current="page">Volumes</a></li>
-            </ul>
-        </nav>
+        {% with %}
+            {% set menus=[{"name": "Pools", "href": "'/pools?mgr=' + mgrUrl"}, {"name": "", "x_text": "poolName", "href": "`/volumes?mgr=${mgrUrl}&pool=${poolName}`"}, {"name": "Volumes"}] %}
+            {% include "partials/breadcrumb.html.j2" %}
+        {% endwith %}
 
         <div x-show="volumes.length == 0 && showWelcome" class="columns">
             <section class="hero column is-8-desktop is-offset-2-desktop">

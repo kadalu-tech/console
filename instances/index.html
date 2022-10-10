@@ -11,6 +11,8 @@
         <script src="/static/js/kadalu-storage-min.js"></script>
         <script src="/static/js/app.js"></script>
         <script defer src="/static/js/alpinejs@3.10.2.js"></script>
+        <script src="/static/js/dayjs.min.js"></script>
+        <script src="/static/js/dayjs.relativeTime.js"></script>
     </head>
     <body>
         <nav class="navbar is-primary" role="navigation" aria-label="main navigation" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdownShow: false, menuShow: false}">
@@ -77,14 +79,48 @@
         <div class="" style="min-height: 80vh">
             
     <div x-data="data" x-init="getStorageManagers" class="p-4">
+        
+            
+            <div class="columns">
+    <div class="column has-text-left">
         <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
             <ul>
-                <li><a href="/"><svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 20 20" fill="currentColor">
+                <li><a href="/instances"><svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 20 20" fill="currentColor">
   <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
 </svg></a></li>
-                <li class="is-active"><a href="#" aria-current="page">Instances</a></li>
+                
+                    
+                    
+                        <li class="is-active"><a href="#" aria-current="page" >Instances</a></li>
+                    
+                
             </ul>
         </nav>
+    </div>
+    <div class="column has-text-right" x-data="lastUpdated">
+        <p x-show="loadTimeDisplay != ''">Last updated <span x-text="loadTimeDisplay"></span><a :href="location.href" class="button is-info is-small ml-2">reload</a></p>
+    </div>
+</div>
+
+<script>
+ dayjs.extend(window.dayjs_plugin_relativeTime)
+ document.addEventListener('alpine:init', () => {
+     Alpine.data('lastUpdated', () => ({
+         loadTime: "",
+         loadTimeDisplay: "",
+         init() {
+             this.loadTime = dayjs();
+             this.loadTimeDisplay = this.loadTime.fromNow();
+             var obj = this;
+             setInterval(function() {
+                 obj.loadTimeDisplay = obj.loadTime.fromNow();
+             }, 30000);
+         }
+     }))
+ });
+</script>
+        
+
         <article class="message is-success" x-show="message != ''">
             <div class="message-body" x-text="message"></div>
         </article>
@@ -142,11 +178,9 @@
                     title="Add a new Storage Manager instance"
                     @click="showAddStorageManager = true"
                     x-show="!showAddStorageManager">
-                <span class="">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon is-small">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
-                    </svg>
-                </span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon is-small">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                </svg>
                 <span>Add</span>
             </button>
         </h1>

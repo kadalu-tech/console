@@ -11,6 +11,8 @@
         <script src="/static/js/kadalu-storage-min.js"></script>
         <script src="/static/js/app.js"></script>
         <script defer src="/static/js/alpinejs@3.10.2.js"></script>
+        <script src="/static/js/dayjs.min.js"></script>
+        <script src="/static/js/dayjs.relativeTime.js"></script>
     </head>
     <body>
         <nav class="navbar is-primary" role="navigation" aria-label="main navigation" x-data="{username: getLoggedinUsername(qparams.get('mgr')), dropdownShow: false, menuShow: false}">
@@ -77,17 +79,67 @@
         <div class="" style="min-height: 80vh">
             
     <div x-data="data" x-init="getVolume" class="p-4">
-        <nav class="breadcrumb" aria-label="breadcrumbs">
+        
+            
+            <div class="columns">
+    <div class="column has-text-left">
+        <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
             <ul>
                 <li><a href="/instances"><svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 20 20" fill="currentColor">
   <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
 </svg></a></li>
-                <li><a :href="'/pools?mgr=' + mgrUrl">Pools</a></li>
-                <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`" x-text="poolName"></a></li>
-                <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`">Volumes</a></li>
-                <li class="is-active"><a href="#" aria-current="page" x-text="volumeName"></a></li>
+                
+                    
+                    
+                        <li><a :href="'/pools?mgr=' + mgrUrl" >Pools</a></li>
+                    
+                
+                    
+                        
+                    
+                    
+                        <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`"  x-text="poolName" ></a></li>
+                    
+                
+                    
+                    
+                        <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`" >Volumes</a></li>
+                    
+                
+                    
+                        
+                    
+                    
+                        <li class="is-active"><a href="#" aria-current="page"  x-text="volumeName" ></a></li>
+                    
+                
             </ul>
         </nav>
+    </div>
+    <div class="column has-text-right" x-data="lastUpdated">
+        <p x-show="loadTimeDisplay != ''">Last updated <span x-text="loadTimeDisplay"></span><a :href="location.href" class="button is-info is-small ml-2">reload</a></p>
+    </div>
+</div>
+
+<script>
+ dayjs.extend(window.dayjs_plugin_relativeTime)
+ document.addEventListener('alpine:init', () => {
+     Alpine.data('lastUpdated', () => ({
+         loadTime: "",
+         loadTimeDisplay: "",
+         init() {
+             this.loadTime = dayjs();
+             this.loadTimeDisplay = this.loadTime.fromNow();
+             var obj = this;
+             setInterval(function() {
+                 obj.loadTimeDisplay = obj.loadTime.fromNow();
+             }, 30000);
+         }
+     }))
+ });
+</script>
+        
+
         <nav class="level has-background-primary-light py-4">
             <div class="level-item has-text-centered">
                 <div>

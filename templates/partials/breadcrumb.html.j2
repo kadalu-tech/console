@@ -1,15 +1,40 @@
-<nav class="breadcrumb mb-6" aria-label="breadcrumbs">
-    <ul>
-        <li><a href="/instances">{% include "partials/icon_home.svg" %}</a></li>
-        {% for menu in menus %}
-            {% if menu.get('x_text', '') != "" %}
-                {% set x_text = ' x-text="' + menu['x_text'] + '" ' %}
-            {% endif %}
-            {% if menu.get("href", '') != "" %}
-                <li><a :href="{{ menu['href'] }}" {{x_text}}>{{ menu['name'] }}</a></li>
-            {% else %}
-                <li class="is-active"><a href="#" aria-current="page" {{x_text}}>{{ menu['name'] }}</a></li>
-            {% endif %}
-        {% endfor %}
-    </ul>
-</nav>
+<div class="columns">
+    <div class="column has-text-left">
+        <nav class="breadcrumb mb-6" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="/instances">{% include "partials/icon_home.svg" %}</a></li>
+                {% for menu in menus %}
+                    {% if menu.get('x_text', '') != "" %}
+                        {% set x_text = ' x-text="' + menu['x_text'] + '" ' %}
+                    {% endif %}
+                    {% if menu.get("href", '') != "" %}
+                        <li><a :href="{{ menu['href'] }}" {{x_text}}>{{ menu['name'] }}</a></li>
+                    {% else %}
+                        <li class="is-active"><a href="#" aria-current="page" {{x_text}}>{{ menu['name'] }}</a></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </nav>
+    </div>
+    <div class="column has-text-right" x-data="lastUpdated">
+        <p x-show="loadTimeDisplay != ''">Last updated <span x-text="loadTimeDisplay"></span><a :href="location.href" class="button is-info is-small ml-2">reload</a></p>
+    </div>
+</div>
+
+<script>
+ dayjs.extend(window.dayjs_plugin_relativeTime)
+ document.addEventListener('alpine:init', () => {
+     Alpine.data('lastUpdated', () => ({
+         loadTime: "",
+         loadTimeDisplay: "",
+         init() {
+             this.loadTime = dayjs();
+             this.loadTimeDisplay = this.loadTime.fromNow();
+             var obj = this;
+             setInterval(function() {
+                 obj.loadTimeDisplay = obj.loadTime.fromNow();
+             }, 30000);
+         }
+     }))
+ });
+</script>

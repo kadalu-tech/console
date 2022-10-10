@@ -4,7 +4,7 @@
 {% block body %}
     <div x-data="data" x-init="getVolume" class="p-4">
         {% with %}
-            {% set menus=[{"name": "Pools", "href": "'/pools?mgr=' + mgrUrl"}, {"name": "", "x_text": "poolName", "href": "`/volumes?mgr=${mgrUrl}&pool=${poolName}`"}, {"name": "Volumes", "href": "`/volumes?mgr=${mgrUrl}&pool=${poolName}"}, {"name": "", "x_text": "volumeName"}] %}
+            {% set menus=[{"name": "Pools", "href": "'/pools?mgr=' + mgrUrl"}, {"name": "", "x_text": "poolName", "href": "`/volumes?mgr=${mgrUrl}&pool=${poolName}`"}, {"name": "Volumes", "href": "`/volumes?mgr=${mgrUrl}&pool=${poolName}`"}, {"name": "", "x_text": "volumeName"}] %}
             {% include "partials/breadcrumb.html.j2" %}
         {% endwith %}
 

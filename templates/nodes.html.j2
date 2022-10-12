@@ -17,7 +17,7 @@
                     <p class="subtitle">
                         Start adding nodes.
                     </p>
-                    <button class="button is-primary my-3" @click="showWelcome = false; showCreateVolume = true">Add</button>
+                    <button class="button is-primary my-3" @click="showWelcome = false; showAddNode = true">Add</button>
                     <p class="help"></p>
                     <img src="/static/undraw_ideas_re_7twj.svg" class="mt-6"/>
                 </div>
@@ -155,6 +155,19 @@
              showWelcome: false,
              error: "",
              pool: {},
+             async init() {
+                 const mgr = storageManagerFromCookies(this.mgrUrl);
+                 try {
+                     this.nodes = await mgr.pool(this.poolName).listNodes(true);
+                     if (this.nodes.length === 0) {
+                         this.showWelcome = true;
+                     }
+                     this.pool = await mgr.pool(this.poolName).get();
+                 } catch (error) {
+                     authErrorRedirectHandle(this.mgrUrl, error);
+                     this.error = error;
+                 }
+             },
              async removeNode(idx) {
                  var node = this.nodes[idx];
                  if (!confirm(`Are you sure want to remove the Node "${node.name}"?`)) {
@@ -166,21 +179,33 @@
                      this.nodes = this.nodes.filter(function(value, index, arr){
                          return value.name != node.name;
                      });
+                    if (this.nodes.size == 0){
+                        showWelcome = "true";
+                    }
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;
                  }
              },
-             async init() {
+             async addNode() {
+                 if (this.nodeName.trim() == "") {
+                     this.error = "Node name is empty";
+                     return
+                 }
+
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
-                     this.nodes = await mgr.pool(this.poolName).listNodes(true);
-                     if (this.nodes.length === 0) {
-                         this.showWelcome = true;
-                     }
-                     this.pool = await mgr.pool(this.poolName).get();
+                     await mgr.pool(this.poolName).addNode(this.nodeName, this.endpoint);
+                     this.nodes = await mgr.pool(this.poolName).listNodes();
+                     this.nodeName = "";
+                     this.error = "";
+                     this.showAddNode = false;
+                     this.message = "Node added successfully!";
+                     setTimeout(function() {
+                         this.message = "";
+                     }, 5000);
                  } catch (error) {
-                     authErrorRedirectHandle(this.mgrUrl, error);
+                     authErrorRedirectHandle(this.mgrUrl, error)
                      this.error = error;
                  }
              }

@@ -119,6 +119,14 @@ function storageUnitStateHtml(storageUnit) {
     return `<span class="has-text-danger">${storageUnit.metrics.health}</span>`;
 }
 
+function storageUnitNameAndStateHtml(storageUnit) {
+    if (storageUnit.metrics.health === "Up") {
+        return `${storageUnit.node.name}:${storageUnit.port} &nbsp; <span class="has-text-success">${storageUnit.metrics.health}</span>`;
+    }
+
+    return `${storageUnit.node.name}:${storageUnit.port} &nbsp; <span class="has-text-danger">${storageUnit.metrics.health}</span>`;
+}
+
 function volumeType(volume) {
     var repDisp = volume.distribute_groups[0].replica_count + volume.distribute_groups[0].disperse_count;
 
@@ -221,7 +229,7 @@ function numberBarColor(p) {
     } else if (p >= 70) {
         return `#F28C28${opacity}`;
     }
-    
+
     return `#c3e1f5`;
 }
 

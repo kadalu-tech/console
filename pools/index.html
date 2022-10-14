@@ -217,7 +217,7 @@
                                     </div>
                                 </nav>
                             </div>
-                        </div>               
+                        </div>
                     </div>
                 </div>
             </template>
@@ -287,6 +287,10 @@
                  this.pools = this.pools.filter(function(value, index, arr){
                      return value.name != pool.name;
                  });
+
+                 if (this.pools.length == 0){
+                    this.showWelcome = true;
+                 }
              }
          }))
      })

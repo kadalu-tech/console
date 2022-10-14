@@ -517,7 +517,7 @@
                                     </div>
                                 </div>
                                 <p class="subtitle is-6">Utilization</p>
-                                
+
                                 <div style="position: relative">
                                     <div class="px-2" x-text="humanize(volume.metrics.inodes_used_count) + '/' + humanize(volume.metrics.inodes_count)"></div>
                                     <div class="px-2 is-size-7 has-text-grey" x-text="`${inodesPercentage(volume)}%`"></div>
@@ -589,6 +589,10 @@
                      this.volumes = this.volumes.filter(function(value, index, arr){
                          return value.name != volume.name;
                      });
+
+                     if (this.volumes.length == 0){
+                        this.showWelcome = true;
+                     }
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;

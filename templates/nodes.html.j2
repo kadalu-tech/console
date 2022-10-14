@@ -179,9 +179,10 @@
                      this.nodes = this.nodes.filter(function(value, index, arr){
                          return value.name != node.name;
                      });
-                    if (this.nodes.size == 0){
-                        showWelcome = "true";
-                    }
+
+                     if (this.nodes.length == 0){
+                        this.showWelcome = true;
+                     }
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;

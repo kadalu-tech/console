@@ -167,38 +167,56 @@
             </div>
         </nav>
 
-        <table class="table is-fullwidth mt-6">
-            <tr>
-                <th>Node</th>
-                <th>Path</th>
-                <th>State</th>
-                <th>Size</th>
-                <th>Inodes</th>
-            </tr>
+        <h1 class="is-size-5 mb-4 px-2" x-show="volumeStorageUnitsCount(volume) > 0">
+            List of Storage Units
+        </h1>
+
+        <div class="columns is-multiline">
             <template x-for="distGroup in volume.distribute_groups">
                 <template x-for="storageUnit in distGroup.storage_units">
-                    <tr>
-                        <td x-text="storageUnit.node.name + ':' + storageUnit.port"></td>
-                        <td x-text="storageUnit.path"></td>
-                        <td x-html="storageUnitStateHtml(storageUnit)"></td>
-                        <td style="position: relative">
-                            <div x-text="humanize(storageUnit.metrics.size_used_bytes, true) + '/' + humanize(storageUnit.metrics.size_bytes, true)"></div>
-                            <div class="is-size-7 has-text-grey" x-text="`${sizePercentage(storageUnit)}%`"></div>
-                            <div class="number-bar">
-                                <div :style="{width: `${sizePercentage(storageUnit)}%`, 'background-color': numberBarColor(sizePercentage(storageUnit))}" class="number-bar-inner"></div>
+
+                    <div class="column is-4-tablet is-3-widescreen">
+                        <div class="card is-3">
+                            <div class="card-content">
+                                <div class="media">
+                                    <div class="media-left">
+                                        <figure class="image is-48x48" x-html="uuidThumbmail(storageUnit.id)">
+                                        </figure>
+                                    </div>
+                                    <div class="media-content">
+                                        <p class="title is-4" x-html="storageUnitNameAndStateHtml(storageUnit)"></p>
+                                        <p class="subtitle">
+                                            <div class="is-size-6" x-text="storageUnit.path"></div>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="content">
+                                    <div style="position: relative">
+                                        <div class="px-2" x-text="humanize(storageUnit.metrics.size_used_bytes, true) + '/' + humanize(storageUnit.metrics.size_bytes, true)"></div>
+                                        <div class="px-2 is-size-7 has-text-grey" x-text="`${sizePercentage(storageUnit)}%`"></div>
+                                        <div class="number-bar">
+                                            <div :style="{width: `${sizePercentage(storageUnit)}%`, 'background-color': numberBarColor(sizePercentage(storageUnit))}" class="number-bar-inner"></div>
+                                        </div>
+                                    </div>
+                                    <p class="subtitle is-6">Size</p>
+
+                                    <div style="position: relative">
+                                        <div class="px-2" x-text="humanize(storageUnit.metrics.inodes_used_count) + '/' + humanize(storageUnit.metrics.inodes_count)"></div>
+                                        <div class="px-2 is-size-7 has-text-grey" x-text="`${inodesPercentage(storageUnit)}%`"></div>
+                                        <div class="number-bar">
+                                            <div :style="{width: `${inodesPercentage(storageUnit)}%`, 'background-color': numberBarColor(inodesPercentage(storageUnit))}" class="number-bar-inner"></div>
+                                        </div>
+                                    </div>
+                                    <p class="subtitle is-6">Inodes</p>
+                                </div>
                             </div>
-                        </td>
-                        <td style="position: relative">
-                            <div x-text="humanize(storageUnit.metrics.inodes_used_count) + '/' + humanize(storageUnit.metrics.inodes_count)"></div>
-                            <div class="is-size-7 has-text-grey" x-text="`${inodesPercentage(storageUnit)}%`"></div>
-                            <div class="number-bar">
-                                <div :style="{width: `${inodesPercentage(storageUnit)}%`, 'background-color': numberBarColor(inodesPercentage(storageUnit))}" class="number-bar-inner"></div>
-                            </div>
-                        </td>
-                    </tr>
+                        </div>
+                    </div>
                 </template>
             </template>
-        </table>
+        </div>
+
     </div>
     <script>
      var qparams = new URLSearchParams(window.location.search);

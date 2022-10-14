@@ -478,6 +478,12 @@
             <template x-for="(volume, idx) in volumes">
                 <div class="column is-4-tablet is-3-widescreen">
                     <div class="card is-3">
+                        <article class="message is-danger" x-show="cardErrors[idx] != '' && cardErrors[idx] != undefined">
+                            <div class="message-body">
+                                <p class="has-text-right"><button class="delete" aria-label="delete" @click="cardErrors[idx] = ''"></button></p>
+                                <p x-html="cardErrors[idx]"></p>
+                            </div>
+                        </article>
                         <div class="has-text-right" x-data="{dropdownShowing: false}">
                             <div class="dropdown is-right" :class="dropdownShowing ? 'is-active' : ''">
                                 <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
@@ -548,6 +554,7 @@
              showWelcome: false,
              error: "",
              pool: {},
+             cardErrors: {},
              volumeUrl(volume) {
                  return `/volume?mgr=${this.mgrUrl}&pool=${this.poolName}&volume=${volume.name}`;
              },
@@ -559,7 +566,11 @@
                      this.volumes[idx] = await (mgr.pool(this.poolName).volume(volume.name)).get(true);
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
-                     this.error = error;
+                     this.cardErrors[idx] = `Failed to start the volume.<br/>${error}`
+                     var obj = this
+                     setTimeout(function() {
+                         obj.cardErrors[idx] = "";
+                     }, 7000);
                  }
              },
              async stopVolume(idx) {
@@ -574,7 +585,11 @@
                      this.volumes[idx] = await mgr.pool(this.poolName).volume(volume.name).get(true);
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
-                     this.error = error;
+                     this.cardErrors[idx] = `Failed to stop the volume.<br/>${error}`
+                     var obj = this
+                     setTimeout(function() {
+                         obj.cardErrors[idx] = "";
+                     }, 7000);
                  }
              },
              async deleteVolume(idx) {
@@ -595,7 +610,11 @@
                      }
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
-                     this.error = error;
+                     this.cardErrors[idx] = `Failed to delete the volume.<br/>${error}`
+                     var obj = this
+                     setTimeout(function() {
+                         obj.cardErrors[idx] = "";
+                     }, 7000);
                  }
              },
              async init() {

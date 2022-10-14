@@ -179,6 +179,12 @@
             <template x-for="(pool, idx) in pools">
                 <div class="column is-4-tablet is-3-widescreen">
                     <div class="card" style="position: relative">
+                        <article class="message is-danger" x-show="cardErrors[idx] != '' && cardErrors[idx] != undefined">
+                            <div class="message-body">
+                                <p class="has-text-right"><button class="delete" aria-label="delete" @click="cardErrors[idx] = ''"></button></p>
+                                <p x-html="cardErrors[idx]"></p>
+                            </div>
+                        </article>
                         <div class="has-text-right" style="position:absolute; right: 0" x-data="{dropdownShowing: false}">
                             <div class="dropdown is-right" :class="dropdownShowing ? 'is-active' : ''">
                                 <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
@@ -237,6 +243,7 @@
              showCreateButton: true,
              showCreatePool: false,
              poolName: "",
+             cardErrors: {},
              async init() {
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
@@ -264,8 +271,9 @@
                      this.showCreatePool = false;
                      this.message = "Pool added successfully!";
                      this.showCreateButton = true;
+                     var obj = this
                      setTimeout(function() {
-                         this.message = "";
+                         obj.message = "";
                      }, 5000);
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error)
@@ -282,6 +290,12 @@
                      await mgr.pool(pool.name).delete();
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
+                     this.cardErrors[idx] = `Failed to delete the Pool.<br/>${error}`
+                     var obj = this
+                     setTimeout(function() {
+                         obj.cardErrors[idx] = "";
+                     }, 7000);
+                     return;
                  }
 
                  this.pools = this.pools.filter(function(value, index, arr){

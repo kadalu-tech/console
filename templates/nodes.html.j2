@@ -106,6 +106,12 @@
             <template x-for="(node, idx) in nodes">
                 <div class="column is-4-tablet is-3-widescreen">
                     <div class="card" style="position: relative">
+                        <article class="message is-danger" x-show="cardErrors[idx] != '' && cardErrors[idx] != undefined">
+                            <div class="message-body">
+                                <p class="has-text-right"><button class="delete" aria-label="delete" @click="cardErrors[idx] = ''"></button></p>
+                                <p x-html="cardErrors[idx]"></p>
+                            </div>
+                        </article>
                         <div class="has-text-right" style="position:absolute; right: 0" x-data="{dropdownShowing: false}">
                             <div class="dropdown is-right" :class="dropdownShowing ? 'is-active' : ''">
                                 <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
@@ -156,6 +162,7 @@
              showWelcome: false,
              error: "",
              pool: {},
+             cardErrors: {},
              async init() {
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
@@ -186,7 +193,11 @@
                      }
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
-                     this.error = error;
+                     this.cardErrors[idx] = `Failed to remove node<br/>${error}`
+                     var obj = this
+                     setTimeout(function() {
+                         obj.cardErrors[idx] = "";
+                     }, 7000);
                  }
              },
              async addNode() {
@@ -203,8 +214,9 @@
                      this.error = "";
                      this.showAddNode = false;
                      this.message = "Node added successfully!";
+                     var obj = this;
                      setTimeout(function() {
-                         this.message = "";
+                         obj.message = "";
                      }, 5000);
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error)

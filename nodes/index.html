@@ -163,13 +163,13 @@
                     <div class="field">
                         <label class="label">Name</label>
                         <div class="control">
-                            <input class="input" x-model="nodeName" type="text" placeholder="node1.example.com">
+                            <input class="input" x-model="nodeName" type="text" placeholder="node1.example.com" @input="endpoint_default=`http://${nodeName}:3000`">
                         </div>
                     </div>
                     <div class="field">
-                        <label class="label">Endpoint</label>
+                        <label class="label">Endpoint (Optional)</label>
                         <div class="control">
-                            <input class="input" x-model="endpoint" type="text" placeholder="">
+                            <input class="input" x-model="endpoint" type="text" :placeholder="endpoint_default">
                         </div>
                     </div>
                 </section>
@@ -274,6 +274,7 @@
              poolName: qparams.get("pool"),
              nodeName: "",
              endpoint: "",
+             endpoint_default: "",
              nodes: [],
              showAddButton: true,
              showAddNode: false,

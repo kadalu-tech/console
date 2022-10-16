@@ -24,13 +24,25 @@
             <div class="level-item has-text-centered">
                 <div>
                     <p class="heading">Utilization</p>
-                    <p class="title is-size-5" x-text="humanize(volume.metrics.size_used_bytes, true) + '/' + humanize(volume.metrics.size_bytes, true)"></p>
+                    <div class="title is-size-5" style="position: relative">
+                        <div class="px-2" x-text="humanize(volume.metrics.size_used_bytes, true) + '/' + humanize(volume.metrics.size_bytes, true)"></div>
+                        <div class="px-2 is-size-7 has-text-grey" x-text="`${sizePercentage(volume)}%`"></div>
+                        <div class="number-bar">
+                            <div :style="{width: `${sizePercentage(volume)}%`, 'background-color': numberBarColor(sizePercentage(volume))}" class="number-bar-inner"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="level-item has-text-centered">
                 <div>
                     <p class="heading">Inodes</p>
-                    <p class="title is-size-5" x-text="humanize(volume.metrics.inodes_used_count) + '/' + humanize(volume.metrics.inodes_count)"></p>
+                    <div class="title is-size-5" style="position: relative">
+                        <div class="px-2" x-text="humanize(volume.metrics.inodes_used_count) + '/' + humanize(volume.metrics.inodes_count)"></div>
+                        <div class="px-2 is-size-7 has-text-grey" x-text="`${inodesPercentage(volume)}%`"></div>
+                        <div class="number-bar">
+                            <div :style="{width: `${inodesPercentage(volume)}%`, 'background-color': numberBarColor(inodesPercentage(volume))}" class="number-bar-inner"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -48,11 +60,11 @@
                             <div class="card-content">
                                 <div class="media">
                                     <div class="media-left">
-                                        <figure class="image is-48x48" x-html="uuidThumbmail(storageUnit.id)">
+                                        <figure class="image is-32x32" x-html="uuidThumbmail(storageUnit.id)">
                                         </figure>
                                     </div>
                                     <div class="media-content">
-                                        <p class="title is-4" x-html="storageUnitNameAndStateHtml(storageUnit)"></p>
+                                        <p class="title is-5" x-html="storageUnitNameAndStateHtml(storageUnit)"></p>
                                         <p class="subtitle">
                                             <div class="is-size-6" x-text="storageUnit.path"></div>
                                         </p>

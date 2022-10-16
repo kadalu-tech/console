@@ -14,4 +14,9 @@
 .number-bar-inner {
     height: 100%;
     mix-blend-mode: multiply;
+    animation: bar-animate 1s;
+}
+
+@keyframes bar-animate {
+    0% {width: 0;}
 }

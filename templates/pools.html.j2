@@ -24,7 +24,7 @@
             </section>
         </div>
 
-        <div class="modal" :class="showCreatePool ? 'is-active' : ''">
+        <div class="modal" :class="showCreatePool ? 'is-active' : ''"  @keydown.escape.window="resetForm()">
             <div class="modal-background"></div>
             <div class="modal-card">
                 <header class="modal-card-head">
@@ -44,7 +44,7 @@
                 </section>
                 <footer class="modal-card-foot">
                     <button class="button is-link" @click="createPool()">Create</button>
-                    <button class="button is-link is-light" @click="showCreatePool = false; poolName = '';showWelcome=true">Cancel</button>
+                    <button class="button is-link is-light" @click="resetForm()">Cancel</button>
                 </footer>
             </div>
         </div>
@@ -131,6 +131,12 @@
              showCreatePool: false,
              poolName: "",
              cardErrors: {},
+             resetForm() {
+                 this.showCreatePool = false;
+                 this.poolName = '';
+                 this.showWelcome=true
+                 this.error = "";
+             },
              async init() {
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {

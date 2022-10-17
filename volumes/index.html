@@ -153,120 +153,140 @@
             <div class="modal-background"></div>
 <div class="modal-card" x-data="volume_create_data">
     <header class="modal-card-head">
-        <p class="modal-card-title">Create a Storage Pool</p>
+        <p class="modal-card-title">Create a Volume</p>
         <button class="delete" @click="resetForm()" aria-label="close"></button>
     </header>
     <section class="modal-card-body">
         <article class="message is-danger" x-show="error != ''">
             <div class="message-body" x-text="error"></div>
         </article>
+        <div class="has-text-right" x-show="req.nodes.length > 0 && !showingAddNodes"><a @click="showingAddNodes = true" title="Auto add new nodes">New nodes</a></div>
+        <div x-show="req.nodes.length == 0 || showingAddNodes" class="has-background-info-light p-4 mb-6">
+            <div class="has-text-right" style="min-height: 30px">
+                <button class="delete" x-show="req.nodes.length > 0 && req.newNodes == ''" @click="showingAddNodes = false" aria-label="close"></button>
+            </div>
+            <p><span x-show="req.nodes.length == 0">No nodes added to this Pool.</span> Automatically add nodes while creating the volume if it is not already added to the pool</p>
+            <div class="field">
+                <div class="control">
+                    <input class="input" x-model="req.newNodes" type="text"
+                           placeholder="node1.example.com,node2.example.com">
+                </div>
+            </div>
+            <p class=""><strong>Note</strong>: Automatic nodes addition is only possible if the node's endpoints are default endpoint.</p>
+        </div>
         <form @submit.prevent="createVolume">
-            <div class="columns">
-                <div class="column is-8">
-                    <div class="field">
-                        <label class="label">Name</label>
-                        <div class="control">
-                            <input class="input" x-model="req.name" type="text"
-                                   placeholder="data">
-                        </div>
+            <div class="field">
+                <label class="label">Volume Name</label>
+                <div class="control">
+                    <input class="input" x-model="req.name" type="text"
+                           placeholder="data">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Volume Type</label>
+                <div class="control">
+                    <div class="select">
+                        <select x-model="req.type" @change="updateStorageUnits()">
+                            <option>Distribute</option>
+                            <option>Replica 2</option>
+                            <option>Replica 3</option>
+                            <option>Disperse</option>
+                        </select>
                     </div>
-                    <div class="field">
-                        <label class="label">Type</label>
-                        <div class="control">
-                            <div class="select">
-                                <select x-model="req.type">
-                                    <option>Distribute</option>
-                                    <option>Replica 2</option>
-                                    <option>Replica 3</option>
-                                    <option>Disperse</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                </div>
+            </div>
 
-                    <div class="field" x-show="req.type == 'Disperse'">
-                        <label class="label">Data</label>
-                        <div class="select">
-                            <select x-model="req.disperseData">
-                                <template x-for="count in [2, 4, 5, 6, 7, 8, 9, 10]">
-                                    <option x-text="count"></option>
-                                </template>
-                            </select>
-                        </div>
-                    </div>
+            <div class="field" x-show="req.type == 'Disperse'">
+                <label class="label">Data</label>
+                <div class="select">
+                    <select x-model="req.disperseData" @change="updateStorageUnits()">
+                        <template x-for="count in [2, 4, 5, 6, 7, 8, 9, 10]">
+                            <option x-text="count"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
 
-                    <div class="field" x-show="req.type == 'Disperse'">
-                        <label class="label">Redundancy</label>
-                        <div class="select">
-                            <select x-model="req.disperseRedundancy">
-                                <template x-for="count in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]">
-                                    <option x-text="count"></option>
-                                </template>
-                            </select>
-                        </div>
-                    </div>
+            <div class="field" x-show="req.type == 'Disperse'">
+                <label class="label">Redundancy</label>
+                <div class="select">
+                    <select x-model="req.disperseRedundancy" @change="updateStorageUnits()">
+                        <template x-for="count in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]">
+                            <option x-text="count"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
 
-                    <div class="field">
-                        <label class="checkbox">
-                            <input type="checkbox" x-model="req.isCommonPath">
-                            Common path for Storage units
-                        </label>
-                    </div>
-                    <div class="field" x-show="req.isCommonPath">
-                        <label class="label">Common Path</label>
-                        <div class="control">
-                            <input class="input" x-model="req.commonPath" type="text" placeholder="">
-                        </div>
-                    </div>
+            <div class="field">
+                <label class="checkbox">
+                    <input type="checkbox" x-model="req.isCommonPath">
+                    Use common path for all the Storage units of this Volume.
+                </label>
+            </div>
+            <div class="field" x-show="req.isCommonPath">
+                <label class="label">Common Path</label>
+                <div class="control">
+                    <input class="input" x-model="req.commonPath" type="text" :placeholder="`/data/${req.name}`">
+                </div>
+            </div>
 
-                    <template x-for="distGrp in req.distributeCount">
-                        <div class="has-background-info-light p-2 mb-2">
-                            <p class="is-size-6">Distribute Group <span x-text="distGrp"></span></p>
-                            <template x-for="idx in getDistributeSize()">
-                                <div class="field has-addons">
-                                    <div class="control">
-                                        <div class="select">
-                                            <select :id="`storage-unit-node-${getStorageUnitId(distGrp-1, idx-1)}`" @select="req.ts=new Date()">
-                                                <template x-for="node in req.nodes">
-                                                    <option x-text="node"></option>
-                                                </template>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="control">
-                                        <input class="input" :id="`storage-unit-port-${getStorageUnitId(distGrp-1, idx-1)}`"
-                                               type="text"
-                                               @input="req.ts=new Date()"
-                                               placeholder="Port: auto">
-                                    </div>
-                                    <div class="control">
-                                        <input class="input" :id="`storage-unit-path-${getStorageUnitId(distGrp-1, idx-1)}`"
-                                               type="text"
-                                               @input="req.ts=new Date()"
-                                               :class="req.isCommonPath ? 'is-static' : ''"
-                                               :placeholder="getStorageUnitPlaceholder(idx)">
-                                    </div>
+            <template x-for="(gid, idx) in req.distributeGroupsIds">
+                <div class="has-background-info-light p-2 mb-2">
+                    <div class="has-text-right">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon is-small" :class="idx == 0 ? 'has-text-grey-light' : 'has-text-dark is-clickable'" @click="distributeGroupmoveUp(idx)">
+                            <path fill-rule="evenodd" d="M11.47 7.72a.75.75 0 011.06 0l7.5 7.5a.75.75 0 11-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 01-1.06-1.06l7.5-7.5z" clip-rule="evenodd" />
+                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon is-small" :class="idx == (req.distributeGroupsIds.length - 1) ? 'has-text-grey-light' : 'has-text-dark is-clickable'" @click="distributeGroupmoveDown(idx)">
+                            <path fill-rule="evenodd" d="M12.53 16.28a.75.75 0 01-1.06 0l-7.5-7.5a.75.75 0 011.06-1.06L12 14.69l6.97-6.97a.75.75 0 111.06 1.06l-7.5 7.5z" clip-rule="evenodd" />
+                        </svg>
+                        <button class="delete is-small" @click="removeDistributeGroup(gid)"></button>
+                    </div>
+                    <p class="is-size-6">Distribute Group <span x-text="idx + 1"></span></p>
+                    <template x-for="(storageUnit, sIdx) in req.distributeGroups[gid]">
+                        <div class="field has-addons">
+                            <div class="control">
+                                <div class="select">
+                                    <select x-model="storageUnit.node">
+                                        <template x-for="node in req.nodes.concat(newNodesList())">
+                                            <option x-text="node"></option>
+                                        </template>
+                                    </select>
                                 </div>
-                            </template>
-                            <div class="has-text-right" x-show="distGrp == req.distributeCount">
-                                <a class="button" @click="req.distributeCount++">+</a>
+                            </div>
+                            <div class="control">
+                                <input class="input" x-model="storageUnit.path"
+                                       type="text"
+                                       :class="req.isCommonPath ? 'is-static' : ''"
+                                       :placeholder="getStorageUnitPlaceholder(idx*req.distributeGroups[gid].length + sIdx)">
+                            </div>
+                            <div class="control has-icons-right">
+                                <input class="input" x-model="storageUnit.port"
+                                       type="text"
+                                       x-show="storageUnit.portManual"
+                                       placeholder="Port: auto">
+                                <span class="icon is-small is-right">
+                                    <button class="delete is-small" x-show="storageUnit.portManual" @click="storageUnit.portManual=false; storageUnit.port = ''"></button>
+                                </span>
+                                <p @click="storageUnit.portManual=true" x-show="!storageUnit.portManual" class="is-clickable p-2 is-size-small has-text-link">Port: auto</p>
                             </div>
                         </div>
                     </template>
-
-                    <div class="">
-                        <div class="field">
-                            <label class="checkbox">
-                                <input type="checkbox" x-model="req.noStart">
-                                Do not start the Volume after create
-                            </label>
-                        </div>
+                    <div class="has-text-right" x-show="idx == (req.distributeGroupsIds.length - 1)">
+                        <a class="button" @click="addDistributeGroup()">+</a>
                     </div>
                 </div>
-                <div class="column is-4">
-                    <div class="container has-background-warning-light p-4" x-html="reqSummary()"></div>
+            </template>
+
+            <div class="">
+                <div class="field">
+                    <label class="checkbox">
+                        <input type="checkbox" x-model="req.noStart">
+                        Do not start the Volume after create
+                    </label>
                 </div>
             </div>
+            <div class="container has-background-warning-light p-4 mt-4" x-html="reqSummary()"></div>
         </form>
     </section>
     <footer class="modal-card-foot">
@@ -278,16 +298,74 @@
  document.addEventListener('alpine:init', () => {
      Alpine.data('volume_create_data', () => ({
          req: {
-             ts: "",
              name: "",
              type: "Distribute",
              isCommonPath: false,
              commonPath: "",
-             distributeCount: 1,
              nodes: [],
+             newNodes: "",
              disperseData: 2,
              disperseRedundancy: 1,
-             noStart: false
+             noStart: false,
+             distributeGroups: {},
+             distributeGroupsIds: []
+         },
+         showingAddNodes: false,
+         newNodesList() {
+             return this.req.newNodes.split(",").map((node) => node.trim());
+         },
+         distributeGroupmoveUp(idx) {
+             if (idx == 0) {
+                 return;
+             }
+             var newGrps = this.req.distributeGroupsIds.slice(0, idx-1);
+             newGrps.push(this.req.distributeGroupsIds[idx]);
+             newGrps.push(this.req.distributeGroupsIds[idx-1]);
+             this.req.distributeGroupsIds = newGrps.concat(this.req.distributeGroupsIds.slice(idx+1));
+         },
+         distributeGroupmoveDown(idx) {
+             if (idx == (this.req.distributeGroupsIds.length - 1)) {
+                 return;
+             }
+             var newGrps = this.req.distributeGroupsIds.slice(0, idx);
+             newGrps.push(this.req.distributeGroupsIds[idx+1]);
+             newGrps.push(this.req.distributeGroupsIds[idx]);
+             this.req.distributeGroupsIds = newGrps.concat(this.req.distributeGroupsIds.slice(idx+2));
+         },
+         updateStorageUnits() {
+             var groupSize = this.getDistributeSize();
+             var nodes = this.req.nodes.concat(this.newNodesList());
+             for(var i=0; i<this.req.distributeGroupsIds.length; i++) {
+                 var gid = this.req.distributeGroupsIds[i];
+                 // Add new Storage units placeholders (Example: When new dist group
+                 // added or while changing Replica 2 to Replica 3
+                 for(var j=this.req.distributeGroups[gid].length; j<groupSize; j++) {
+                     this.req.distributeGroups[gid].push({
+                         node: nodes.length > 0 ? nodes[0] : '',
+                         port: '',
+                         portManual: false,
+                         path: ''
+                     })
+                 }
+
+                 // Remove extra Storage units (Example: When changed from Replica 3 to Replica 2)
+                 this.req.distributeGroups[gid] = this.req.distributeGroups[gid].slice(0, groupSize);
+             }
+         },
+         addDistributeGroup() {
+             var gid = `${(new Date()).getTime()}`;
+             this.req.distributeGroupsIds.push(gid);
+             this.req.distributeGroups[gid] = [];
+             this.updateStorageUnits();
+         },
+         removeDistributeGroup(distGrpID) {
+             if (this.req.distributeGroupsIds.length == 1) {
+                 return;
+             }
+             this.req.distributeGroupsIds = this.req.distributeGroupsIds.filter(function(value, index, arr){
+                 return value != distGrpID;
+             });
+             delete this.req.distributeGroups[distGrpID];
          },
          resetForm() {
              this.showCreateVolume = false;
@@ -295,7 +373,7 @@
          },
          getTypeName() {
              var pfx = '';
-             if (this.req.type != 'Distribute' && this.req.distributeCount > 1) {
+             if (this.req.type != 'Distribute' && this.req.distributeGroupsIds.length > 1) {
                  pfx = 'Distributed ';
              }
 
@@ -307,18 +385,19 @@
          },
          reqSummary() {
              summary = `<p class="is-size-4">Summary</p>
-                            <p class="is-hidden">${this.req.ts}</p>
-                            <p class="">Name: ${this.poolName}/${this.req.name == '' ? '-' : this.req.name}</p>
-                            <p class="">Type: ${this.getTypeName()}</p>
-                            <p class="">Use common path: ${this.req.isCommonPath ? `Yes (${this.req.commonPath})` : 'No'}</p>
-                            <p class="">Start Volume after create: ${this.req.noStart ? 'No' : 'Yes'}</p>
-                            <p class="">Number of distribute groups: ${this.req.distributeCount}</p>`;
-             
-             for (var i=0; i<this.req.distributeCount; i++) {
+                <p class="">Name: ${this.poolName}/${this.req.name == '' ? '-' : this.req.name}</p>
+                <p class="">Type: ${this.getTypeName()}</p>
+                <p class="">Use common path: ${this.req.isCommonPath ? `Yes (${this.req.commonPath})` : 'No'}</p>
+                <p class="">Start Volume after create: ${this.req.noStart ? 'No' : 'Yes'}</p>
+                <p class="">Auto add new nodes: ${this.req.newNodes == '' ? '-' : this.req.newNodes}</p>
+                <p class="">Number of distribute groups: ${this.req.distributeGroupsIds.length}</p>`;
+
+             for (var i=0; i<this.req.distributeGroupsIds.length; i++) {
+                 var gid = this.req.distributeGroupsIds[i];
                  summary += `<p>Distribute group ${i+1}</p>`;
-                 for (var j=0; j<this.getDistributeSize(); j++) {
-                     var idx = i*this.getDistributeSize() + j + 1;
-                     summary += `<p class="ml-2">${this.getStorageUnitNode(idx)}${this.getStorageUnitPort(idx)}:${this.getStorageUnitPath(idx)}</p>`
+                 for (var j=0; j<this.req.distributeGroups[gid].length; j++) {
+                     var storageUnit = this.req.distributeGroups[gid][j];
+                     summary += `<p class="ml-2">${this.getStorageUnitNode(storageUnit)}${this.getStorageUnitPort(storageUnit)}:${this.getStorageUnitPath(storageUnit)}</p>`
                  }
              }
              return summary;
@@ -346,50 +425,53 @@
 
              return parseInt(this.req.disperseRedundancy, 10);
          },
-         getStorageUnitPath(idx) {
+         getStorageUnitPath(storageUnit) {
              if (this.req.isCommonPath) {
                  return this.req.commonPath;
              }
-             return document.getElementById(`storage-unit-path-${idx}`).value;
+             return storageUnit.path
          },
-         getStorageUnitPort(idx) {
-             var port = document.getElementById(`storage-unit-port-${idx}`).value;
-             if (port == '') {
-                 return 0;
+         getStorageUnitPort(storageUnit) {
+             if (storageUnit.port == '0' || storageUnit.port == '') {
+                 return '';
              }
 
-             return parseInt(port, 10);
+             return `:${parseInt(storageUnit.port, 10)}`;
          },
-         getStorageUnitNode(idx) {
-             return document.getElementById(`storage-unit-node-${idx}`).value
+         getStorageUnitNode(storageUnit) {
+             return storageUnit.node
          },
          createVolume() {
              var req = {
                  name: this.req.name,
                  distribute_groups: [],
-                 no_start: this.req.noStart
+                 no_start: this.req.noStart,
+                 auto_add_nodes: this.req.newNodes != ''
              }
-             var distGrpSize = this.getDistributeSize();
-             for (var i=0; i<this.req.distributeCount; i++) {
+             for (var i=0; i<this.req.distributeGroupsIds.length; i++) {
                  var distGrp = {
                      replica_count: this.getReplicaCount(),
                      disperse_count: this.getDisperseCount(),
                      redundancy_count: this.getRedundancyCount(),
                      storage_units: [],
                  };
-                 for (var j=0; j<distGrpSize; j++) {
-                     var idx = i * distGrpSize + j + 1;
+                 var gid = this.req.distributeGroupsIds[i];
+                 for (var j=0; j<this.req.distributeGroups[gid].length; j++) {
+                     var storageUnit = this.req.distributeGroups[gid][j];
+                     var p = this.getStorageUnitPort(storageUnit);
                      distGrp.storage_units.push({
-                         path: this.getStorageUnitPath(idx),
-                         port: this.getStorageUnitPort(idx),
+                         path: this.getStorageUnitPath(storageUnit),
+                         port: p == '' ? 0: parseInt(p, 10),
                          node: {
-                             name: this.getStorageUnitNode(idx)
+                             name: this.getStorageUnitNode(storageUnit)
                          }
                      });
                  }
 
                  req.distribute_groups.push(distGrp);
              }
+
+             console.log(req);
          },
          getDistributeSize() {
              if (this.req.type == "Replica 2") {
@@ -401,9 +483,6 @@
              }
 
              return 1;
-         },
-         getStorageUnitId(distGrpIdx, storageUnitIdx) {
-             return distGrpIdx * this.getDistributeSize() + storageUnitIdx + 1;
          },
          getStorageUnitPlaceholder(idx) {
              if (this.req.isCommonPath) {
@@ -421,6 +500,8 @@
                  authErrorRedirectHandle(this.mgrUrl, error)
                  this.req.nodes = [];
              }
+             // Add first distribute group
+             this.addDistributeGroup();
          }
      }))
  });

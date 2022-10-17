@@ -1,5 +1,5 @@
 <div class="modal-background"></div>
-<div class="modal-card" x-data="volume_create_data">
+<div class="modal-card" x-data="volume_create_data" @keydown.escape.window="resetForm()">
     <header class="modal-card-head">
         <p class="modal-card-title">Create a Volume</p>
         <button class="delete" @click="resetForm()" aria-label="close"></button>
@@ -218,6 +218,7 @@
          resetForm() {
              this.showCreateVolume = false;
              this.showWelcome=true;
+             this.error = "";
          },
          getTypeName() {
              var pfx = '';

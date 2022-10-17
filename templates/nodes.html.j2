@@ -24,7 +24,7 @@
             </section>
         </div>
 
-        <div class="modal" :class="showAddNode ? 'is-active' : ''">
+        <div class="modal" :class="showAddNode ? 'is-active' : ''" @keydown.escape.window="resetForm()">
             <div class="modal-background"></div>
             <div class="modal-card">
                 <header class="modal-card-head">
@@ -50,7 +50,7 @@
                 </section>
                 <footer class="modal-card-foot">
                     <button class="button is-link" @click="addNode()">Add</button>
-                    <button class="button is-link is-light" @click="showAddNode = false; nodeName = '';showWelcome=true">Cancel</button>
+                    <button class="button is-link is-light" @click="resetForm()">Cancel</button>
                 </footer>
             </div>
         </div>
@@ -163,6 +163,12 @@
              error: "",
              pool: {},
              cardErrors: {},
+             resetForm() {
+                 this.showAddNode = false;
+                 this.nodeName = '';
+                 this.showWelcome=true
+                 this.error = "";
+             },
              async init() {
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {

@@ -157,6 +157,10 @@
                      setCookie(`${mgrApiCookieName}-userid`, apiKey.user_id);
                      setCookie(`${mgrApiCookieName}-api_key_id`, apiKey.id);
                      setLoggedinUsername(qparams.get("mgr"), this.username);
+                     if (document.referrer && document.referrer != "") {
+                         location.href = document.referrer;
+                         return;
+                     }
                      location.href = `/pools?mgr=${qparams.get("mgr")}`;
                  } catch (error) {
                      this.error = error;

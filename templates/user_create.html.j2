@@ -1,0 +1,82 @@
+{% extends "layouts/default.html.j2" %}
+
+{% block page_title %}User Create{% endblock %}
+{% block body %}
+    <div x-data="data" class="hero">
+        <div class="hero-body">
+            <div class="container">
+                <div class="column is-6-desktop is-12-mobile is-offset-3-desktop">
+                    <div class="box">
+                        <article class="message is-danger" x-show="error != ''">
+                            <div class="message-body" x-text="error"></div>
+                        </article>
+                        <p class="has-text-centered">Create user to Kadalu Storage Manager.</p>
+                        <p class="has-text-centered"><span class="tag is-warning" x-text="mgrUrl"></span></p>
+                        <form @submit.prevent="onUserCreate">
+                            <div class="field">
+                                <label class="label">Username</label>
+                                <div class="control">
+                                    <input class="input" type="text" x-model="username" placeholder="Username">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label class="label">Enter New Password</label>
+                                <div class="control">
+                                    <input class="input" type="password" x-model="password" placeholder="Password">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label class="label">Confirm Password</label>
+                                <div class="control">
+                                    <input class="input" type="password" x-model="confirm_password" placeholder="Password">
+                                </div>
+                            </div>
+
+                            <div class="field has-text-centered">
+                                <div class="control">
+                                    <input type="submit" class="button is-primary" value="Create User"/>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+     document.addEventListener('alpine:init', () => {
+         Alpine.data('data', () => ({
+             linkName: "user_create",
+             username: "",
+             password: "",
+             confirm_password: "",
+             mgrUrl: qparams.get("mgr"),
+             error: "",
+             async onUserCreate() {
+                 if (this.username.trim() == "") {
+                     this.error = "Username is empty";
+                     return
+                 }
+
+                 if (this.password.trim() == "") {
+                     this.error = "Password is empty";
+                     return
+                 }
+
+                 if (this.password.trim() != this.confirm_password.trim()) {
+                    this.error = "Password does not match";
+                    returns
+                 }
+
+                 const mgr = new StorageManager(this.mgrUrl);
+                 try {
+                     await mgr.createUser(this.username, this.password);
+                     location.href = `/pools?mgr=${this.mgrUrl}`;
+                 } catch (error) {
+                     this.error = error;
+                 }
+             }
+         }))
+     })
+    </script>
+{% endblock %}

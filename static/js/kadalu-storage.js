@@ -254,7 +254,7 @@
       return await User.create(this, username, password, fullName);
     }
     async hasUsers() {
-      return await User.hasUsers();
+      return await User.hasUsers(this);
     }
     user(username) {
       return new User(this, username);

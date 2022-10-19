@@ -74,7 +74,7 @@
         <div class="columns">
             <template x-for="sm in storageManagers">
                 <div class="column is-3">
-                    <div class="card is-clickable m-2" @click="location.href=poolUrl(pool)">
+                    <div class="card is-clickable m-2" @click="handleRedirectToCreateOrLogin(sm.url)">
                         <div class="has-text-right" x-data="{dropdownShowing: false}">
                             <div class="dropdown is-right" :class="dropdownShowing ? 'is-active' : ''">
                                 <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
@@ -86,7 +86,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="card-content">
                             <div class="media">
                                 <div class="media-left">
@@ -223,6 +223,11 @@
                      this.showAddButton = false;
                  }
                  this.getStorageManagers();
+             },
+             async handleRedirectToCreateOrLogin(smUrl) {
+                const mgr = new StorageManager(smUrl);
+                var hasUsers = await mgr.hasUsers();
+                location.href = hasUsers ? `/pools?mgr=${smUrl}` : `/user_create?mgr=${smUrl}`;
              }
          }))
      })

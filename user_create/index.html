@@ -82,7 +82,10 @@
         <div class="hero-body">
             <div class="container">
                 <div class="column is-6-desktop is-12-mobile is-offset-3-desktop">
-                    <div class="box">
+                    <article class="message is-success" x-show="message != ''">
+                        <div class="message-body" x-html="message"></div>
+                    </article>
+                    <div class="box" x-show="showCreateUserForm">
                         <article class="message is-danger" x-show="error != ''">
                             <div class="message-body" x-text="error"></div>
                         </article>
@@ -107,7 +110,6 @@
                                     <input class="input" type="password" x-model="confirm_password" placeholder="Password">
                                 </div>
                             </div>
-
                             <div class="field has-text-centered">
                                 <div class="control">
                                     <input type="submit" class="button is-primary" value="Create User"/>
@@ -128,6 +130,8 @@
              confirm_password: "",
              mgrUrl: qparams.get("mgr"),
              error: "",
+             message: "",
+             showCreateUserForm: true,
              async onUserCreate() {
                  if (this.username.trim() == "") {
                      this.error = "Username is empty";
@@ -147,7 +151,8 @@
                  const mgr = new StorageManager(this.mgrUrl);
                  try {
                      await mgr.createUser(this.username, this.password);
-                     location.href = `/pools?mgr=${this.mgrUrl}`;
+                     this.showCreateUserForm = false;
+                     this.message = `User Created Successfully! <a href="/pools?mgr=${this.mgrUrl}">Login</a> To Proceed.`
                  } catch (error) {
                      this.error = error;
                  }

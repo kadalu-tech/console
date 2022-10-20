@@ -5,9 +5,6 @@
         <button class="delete" @click="resetForm()" aria-label="close"></button>
     </header>
     <section class="modal-card-body">
-        <article class="message is-danger" x-show="error != ''">
-            <div class="message-body" x-text="error"></div>
-        </article>
         <div class="has-text-right" x-show="req.nodes.length > 0 && !showingAddNodes"><a @click="showingAddNodes = true" title="Auto add new nodes">New nodes</a></div>
         <div x-show="req.nodes.length == 0 || showingAddNodes" class="has-background-info-light p-4 mb-6">
             <div class="has-text-right" style="min-height: 30px">
@@ -17,6 +14,7 @@
             <div class="field">
                 <div class="control">
                     <input class="input" x-model="req.newNodes" type="text"
+                           @input="updateStorageUnits()"
                            placeholder="node1.example.com,node2.example.com">
                 </div>
             </div>
@@ -95,7 +93,8 @@
                         <div class="field has-addons">
                             <div class="control">
                                 <div class="select">
-                                    <select x-model="storageUnit.node">
+                                    <select x-model="storageUnit.node" >
+                                        <option>Select</option>
                                         <template x-for="node in req.nodes.concat(newNodesList())">
                                             <option x-text="node"></option>
                                         </template>
@@ -134,6 +133,9 @@
                     </label>
                 </div>
             </div>
+            <article class="message is-danger mt-2" x-show="error != ''">
+                <div class="message-body" x-html="error"></div>
+            </article>
             <div class="container has-background-warning-light p-4 mt-4" x-html="reqSummary()"></div>
         </form>
     </section>
@@ -152,6 +154,7 @@
              commonPath: "",
              nodes: [],
              newNodes: "",
+             allNodes: [],
              disperseData: 2,
              disperseRedundancy: 1,
              noStart: false,
@@ -160,7 +163,10 @@
          },
          showingAddNodes: false,
          newNodesList() {
-             return this.req.newNodes.split(",").map((node) => node.trim());
+             var nodes = this.req.newNodes.split(",").map((node) => node.trim());
+             return nodes.filter(function(value, index, arr){
+                 return value != ""
+             });
          },
          distributeGroupmoveUp(idx) {
              if (idx == 0) {
@@ -189,7 +195,7 @@
                  // added or while changing Replica 2 to Replica 3
                  for(var j=this.req.distributeGroups[gid].length; j<groupSize; j++) {
                      this.req.distributeGroups[gid].push({
-                         node: nodes.length > 0 ? nodes[0] : '',
+                         node: 'Select',
                          port: '',
                          portManual: false,
                          path: ''
@@ -246,7 +252,9 @@
                  summary += `<p>Distribute group ${i+1}</p>`;
                  for (var j=0; j<this.req.distributeGroups[gid].length; j++) {
                      var storageUnit = this.req.distributeGroups[gid][j];
-                     summary += `<p class="ml-2">${this.getStorageUnitNode(storageUnit)}${this.getStorageUnitPort(storageUnit)}:${this.getStorageUnitPath(storageUnit)}</p>`
+                     if (storageUnit.node != "Select") {
+                         summary += `<p class="ml-2">${this.getStorageUnitNode(storageUnit)}${this.getStorageUnitPort(storageUnit)}:${this.getStorageUnitPath(storageUnit)}</p>`
+                     }
                  }
              }
              return summary;
@@ -290,7 +298,7 @@
          getStorageUnitNode(storageUnit) {
              return storageUnit.node
          },
-         createVolume() {
+         async createVolume() {
              var req = {
                  name: this.req.name,
                  distribute_groups: [],
@@ -320,7 +328,22 @@
                  req.distribute_groups.push(distGrp);
              }
 
-             console.log(req);
+             try {
+                 await this.mgr.pool(this.poolName).createVolume(req.name, req.distribute_groups, req)
+                 this.volumes.unshift(await this.mgr.pool(this.poolName).volume(req.name).get(true))
+                 this.req.name = "";
+                 this.error = "";
+                 this.showCreateVolume = false;
+                 this.message = "Volume created successfully!";
+                 this.showCreateButton = true;
+                 var obj = this
+                 setTimeout(function() {
+                     obj.message = "";
+                 }, 5000);
+             } catch (error) {
+                 authErrorRedirectHandle(this.mgrUrl, error);
+                 this.error = `Failed to create the volume.<br/>${error}`
+             }
          },
          getDistributeSize() {
              if (this.req.type == "Replica 2") {

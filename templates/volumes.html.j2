@@ -156,15 +156,15 @@
              error: "",
              pool: {},
              cardErrors: {},
+             mgr: null,
              volumeUrl(volume) {
                  return `/volume?mgr=${this.mgrUrl}&pool=${this.poolName}&volume=${volume.name}`;
              },
              async startVolume(idx) {
                  var volume = this.volumes[idx];
-                 const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
-                     await mgr.pool(this.poolName).volume(volume.name).start();
-                     this.volumes[idx] = await (mgr.pool(this.poolName).volume(volume.name)).get(true);
+                     await this.mgr.pool(this.poolName).volume(volume.name).start();
+                     this.volumes[idx] = await (this.mgr.pool(this.poolName).volume(volume.name)).get(true);
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
                      this.cardErrors[idx] = `Failed to start the volume.<br/>${error}`
@@ -179,11 +179,10 @@
                  if (!confirm(`Are you sure want to stop the Volume "${volume.name}"?`)) {
                      return;
                  }
-                 var volume = this.volumes[idx];
-                 const mgr = storageManagerFromCookies(this.mgrUrl);
+
                  try {
-                     await mgr.pool(this.poolName).volume(volume.name).stop();
-                     this.volumes[idx] = await mgr.pool(this.poolName).volume(volume.name).get(true);
+                     await this.mgr.pool(this.poolName).volume(volume.name).stop();
+                     this.volumes[idx] = await this.mgr.pool(this.poolName).volume(volume.name).get(true);
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
                      this.cardErrors[idx] = `Failed to stop the volume.<br/>${error}`
@@ -198,10 +197,9 @@
                  if (!confirm(`Are you sure want to delete the Volume "${volume.name}"?`)) {
                      return;
                  }
-                 var volume = this.volumes[idx];
-                 const mgr = storageManagerFromCookies(this.mgrUrl);
+
                  try {
-                     await mgr.pool(this.poolName).volume(volume.name).delete();
+                     await this.mgr.pool(this.poolName).volume(volume.name).delete();
                      this.volumes = this.volumes.filter(function(value, index, arr){
                          return value.name != volume.name;
                      });
@@ -219,13 +217,13 @@
                  }
              },
              async init() {
-                 const mgr = storageManagerFromCookies(this.mgrUrl);
+                 this.mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
-                     this.volumes = await mgr.pool(this.poolName).listVolumes(true);
+                     this.volumes = await this.mgr.pool(this.poolName).listVolumes(true);
                      if (this.volumes.length === 0) {
                          this.showWelcome = true;
                      }
-                     this.pool = await mgr.pool(this.poolName).get();
+                     this.pool = await this.mgr.pool(this.poolName).get();
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;

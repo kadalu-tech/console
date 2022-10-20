@@ -14,6 +14,17 @@
       this.pool_name = pool_name;
       this.name = name;
     }
+    static async create(mgr, pool_name, name, distribute_groups, opts) {
+      return await mgr.httpPost(`/api/v1/pools/${pool_name}/volumes`, {
+        name,
+        distribute_groups,
+        no_start: opts["no_start"] !== void 0 ? opts["no_start"] : false,
+        volume_id: opts["volume_id"] !== void 0 ? opts["volume_id"] : "",
+        auto_create_pool: opts["auto_create_pool"] !== void 0 ? opts["auto_create_pool"] : false,
+        auto_add_nodes: opts["auto_add_nodes"] !== void 0 ? opts["auto_add_nodes"] : false,
+        options: opts["options"] !== void 0 ? opts["options"] : {}
+      });
+    }
     static async list(mgr, pool_name, state = false) {
       return await mgr.httpGet(`/api/v1/pools/${pool_name}/volumes?state=${state ? 1 : 0}`);
     }
@@ -107,6 +118,9 @@
         `/api/v1/pools/${this.name}/rename`,
         { new_pool_name: newName }
       );
+    }
+    async createVolume(name, distribute_groups, opts) {
+      return await Volume.create(this.mgr, this.name, name, distribute_groups, opts);
     }
   };
 

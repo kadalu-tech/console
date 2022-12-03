@@ -74,7 +74,7 @@
         <div class="columns">
             <template x-for="sm in storageManagers">
                 <div class="column is-3">
-                    <div class="card is-clickable m-2" @click="handleRedirectToCreateOrLogin(sm.url)">
+                    <div class="card is-clickable m-2">
                         <div class="has-text-right" x-data="{dropdownShowing: false}">
                             <div class="dropdown is-right" :class="dropdownShowing ? 'is-active' : ''">
                                 <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
@@ -87,7 +87,7 @@
                             </div>
                         </div>
 
-                        <div class="card-content">
+                        <div class="card-content" @click="handleRedirectToCreateOrLogin(sm.url)">
                             <div class="media">
                                 <div class="media-left">
                                     <svg xmlns="http://www.w3.org/2000/svg" x-show="sm.reachable" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon has-text-success">
@@ -98,8 +98,8 @@
                                     </svg>
                                 </div>
                                 <div class="media-content">
-                                    <p class="title is-4" x-text="sm.name" @click="location.href=storageManagerUrl(sm)"></p>
-                                    <p class="subtitle is-6" x-text="sm.url" @click="location.href=storageManagerUrl(sm)"></p>
+                                    <p class="title is-4" x-text="sm.name"></p>
+                                    <p class="subtitle is-6" x-text="sm.url"></p>
                                 </div>
                             </div>
                         </div>

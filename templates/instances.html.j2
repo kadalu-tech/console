@@ -59,6 +59,38 @@
                 </div>
         </div>
 
+        <div class="modal" :class="showEditStorageManager ? 'is-active' : ''">
+            <div class="modal-background"></div>
+                <div class="modal-card">
+                    <header class="modal-card-head">
+                        <p class="modal-card-title">Edit existing storage manager instance</p>
+                        <button class="delete" @click="resetForm()" aria-label="close"></button>
+                    </header>
+                    <section class="modal-card-body">
+                        <article class="message is-danger" x-show="error != ''">
+                            <div class="message-body" x-text="error"></div>
+                        </article>
+                        <div class="field">
+                            <label class="label">Name</label>
+                            <div class="control">
+                                <input class="input" x-model="smEditName" type="sm.name">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">URL</label>
+                            <div class="control">
+                                <input class="input" x-model="smEditUrl" type="sm.url">
+                            </div>
+                        </div>
+                    </section>
+                    <footer class="modal-card-foot">
+                        <button class="button is-link" @click="saveEditInstance()">Edit</button>
+                        <button class="button is-link is-light" @click="resetForm()">Cancel</button>
+                    </footer>
+                </div>
+        </div>
+
         <h1 class="is-size-5 mb-4 px-2" x-show="storageManagers.length > 0">
             List of instances
             <button class="button is-primary is-clickable ml-2 is-small"
@@ -81,6 +113,8 @@
                                 <div class="dropdown-menu has-text-left" role="menu">
                                     <div class="dropdown-content">
                                         <a class="dropdown-item" @click="deleteInstance(sm.name)" x-html="`<span class='has-text-danger'>${SVG_DELETE}</span> Delete`">
+                                        </a>
+                                        <a class="dropdown-item" @click="editInstance(sm)" x-html="`<span class='has-text-waring'>${SVG_EDIT}</span> Edit`">
                                         </a>
                                     </div>
                                 </div>
@@ -117,17 +151,23 @@
              linkName: "storage_managers",
              showWelcome: false,
              showAddStorageManager: false,
+             showEditStorageManager: false,
              showAddButton: true,
              smName: "",
              smUrl: "",
+             smEditName: "",
+             smEditUrl: "",
              error: "",
              message: "",
              storageManagers: [],
              resetForm() {
                  this.showAddStorageManager = false;
+                 this.showEditStorageManager = false;
                  this.showWelcome = true;
                  this.smName = '';
                  this.smUrl = '';
+                 this.smEditName = '';
+                 this.smEditUrl = '';
                  this.error = '';
              },
              storageManagerUrl(sm) {
@@ -223,6 +263,42 @@
                      this.showAddButton = false;
                  }
                  this.getStorageManagers();
+             },
+             editInstance(sm) {
+                 var obj = this;
+                 obj.smEditName = sm.name;
+                 obj.smEditUrl = sm.url;
+                 obj.smName = sm.name;
+                 obj.smUrl = sm.url;
+                 obj.showEditStorageManager = true;
+             },
+             saveEditInstance() {
+                 var obj = this;
+                 var instances = window.localStorage.getItem("storage_managers");
+
+                 if (!instances) instances = "[]";
+                 var data = JSON.parse(instances);
+
+                 for (var i=0; i<data.length; i++) {
+                     if (data[i].name.toLowerCase() === obj.smName.toLowerCase()) {
+                        data[i].name = obj.smEditName;
+                        data[i].url = obj.smEditUrl;
+                     }
+                 }
+
+                 window.localStorage.setItem("storage_managers", JSON.stringify(data));
+
+                 obj.getStorageManagers();
+                 obj.smName = "";
+                 obj.smUrl = "";
+                 obj.smEditName = "";
+                 obj.smEditUrl = "";
+                 obj.showEditStorageManager = false;
+                 obj.message = "Storage Manager instance edited successfully!";
+                 obj.showAddButton = true;
+                 setTimeout(function() {
+                     obj.message = "";
+                 }, 5000);
              },
              async handleRedirectToCreateOrLogin(sm) {
                  if (!sm.reachable) return;

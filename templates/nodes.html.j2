@@ -1,10 +1,15 @@
 {% extends "layouts/default.html.j2" %}
 
 {% block page_title %}Nodes List{% endblock %}
+{% block extra_menus %}
+    <a x-data="{mgrUrl: qparams.get('mgr')}" :href="poolsUrl(mgrUrl)" class="navbar-item">
+        Pools
+    </a>
+{% endblock %}
 {% block body %}
     <div x-data="data" class="p-4">
         {% with %}
-            {% set menus=[{"name": "Pools", "href": "'/pools?mgr=' + mgrUrl"}, {"name": "", "x_text": "poolName", "href": "`/nodes?mgr=${mgrUrl}&pool=${poolName}`"}, {"name": "Nodes"}] %}
+            {% set menus=[{"name": "Nodes"}] %}
             {% include "partials/breadcrumb.html.j2" %}
         {% endwith %}
 
@@ -12,7 +17,7 @@
             <section class="hero column is-8-desktop is-offset-2-desktop">
                 <div class="hero-body has-text-centered">
                     <p class="title">
-                        No nodes added to the Storage Pool!
+                        No nodes added to the Cluster!
                     </p>
                     <p class="subtitle">
                         Start adding nodes.
@@ -28,7 +33,7 @@
             <div class="modal-background"></div>
             <div class="modal-card">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">Add a node to the Storage Pool</p>
+                    <p class="modal-card-title">Add a node to the Cluster</p>
                     <button class="delete" @click="resetForm()" aria-label="close"></button>
                 </header>
                 <section class="modal-card-body">
@@ -58,32 +63,32 @@
         <nav class="level has-background-primary-light py-4" x-show="nodes.length > 0">
             <div class="level-item has-text-centered">
                 <div>
-                    <a :href="volumesUrl(mgrUrl, pool)">
-                        <p class="heading">Volumes</p>
-                        <p class="title is-size-5" x-text="pool.volumes_count"></p>
+                    <a :href="poolsUrl(mgrUrl)">
+                        <p class="heading">Pools</p>
+                        <p class="title is-size-5" x-text="pools.length"></p>
                     </a>
                 </div>
             </div>
             <div class="level-item has-text-centered">
                 <div>
                         <p class="heading">Nodes</p>
-                        <p class="title is-size-5" x-text="pool.nodes_count"></p>
+                        <p class="title is-size-5" x-text="nodes.length"></p>
                 </div>
             </div>
             <!-- <div class="level-item has-text-centered">
                  <div>
                  <p class="heading">Storage Units</p>
-                 <p class="title is-size-5" x-text="poolStorageUnitsCount(volumes)"></p>
+                 <p class="title is-size-5" x-text="poolStorageUnitsCount(pools)"></p>
                  </div>
                  </div> -->
             <!-- <div class="level-item has-text-centered">
                  <div>
                  <p class="heading">Utilization</p>
                  <div class="title is-size-5" style="position: relative">
-                 <div class="px-2" x-text="poolUtilization(volumes)"></div>
-                 <div class="px-2 is-size-7 has-text-grey" x-text="`${poolSizePercentage(volumes)}%`"></div>
+                 <div class="px-2" x-text="poolUtilization(pools)"></div>
+                 <div class="px-2 is-size-7 has-text-grey" x-text="`${poolSizePercentage(pools)}%`"></div>
                  <div class="number-bar-in-header">
-                 <div :style="{width: `${poolSizePercentage(volumes)}%`, 'background-color': numberBarColor(poolSizePercentage(volumes))}" class="number-bar-inner"></div>
+                 <div :style="{width: `${poolSizePercentage(pools)}%`, 'background-color': numberBarColor(poolSizePercentage(pools))}" class="number-bar-inner"></div>
                  </div>
                  </div>
                  </div>
@@ -93,7 +98,7 @@
         <h1 class="is-size-5 mb-4 px-2"  x-show="nodes.length > 0">
             List of Nodes
             <button class="button is-primary is-small is-clickable ml-2"
-                    title="Create a Volume"
+                    title="Create a Pool"
                     @click="showAddNode = true"
                     x-show="showAddButton">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon is-small">
@@ -152,7 +157,6 @@
          Alpine.data('data', () => ({
              linkName: "nodes",
              mgrUrl: qparams.get("mgr"),
-             poolName: qparams.get("pool"),
              nodeName: "",
              endpoint: "",
              endpoint_default: "",
@@ -161,7 +165,7 @@
              showAddNode: false,
              showWelcome: false,
              error: "",
-             pool: {},
+             pools: [],
              cardErrors: {},
              resetForm() {
                  this.showAddNode = false;
@@ -172,11 +176,11 @@
              async init() {
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
-                     this.nodes = await mgr.pool(this.poolName).listNodes(true);
+                     this.nodes = await mgr.listNodes(true);
                      if (this.nodes.length === 0) {
                          this.showWelcome = true;
                      }
-                     this.pool = await mgr.pool(this.poolName).get();
+                     this.pools = await mgr.listPools();
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;
@@ -189,7 +193,7 @@
                  }
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
-                     await mgr.pool(this.poolName).node(node.name).remove();
+                     await mgr.node(node.name).remove();
                      this.nodes = this.nodes.filter(function(value, index, arr){
                          return value.name != node.name;
                      });
@@ -214,8 +218,8 @@
 
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
-                     await mgr.pool(this.poolName).addNode(this.nodeName, this.endpoint);
-                     this.nodes = await mgr.pool(this.poolName).listNodes();
+                     await mgr.addNode(this.nodeName, this.endpoint);
+                     this.nodes = await mgr.listNodes();
                      this.nodeName = "";
                      this.error = "";
                      this.showAddNode = false;

@@ -1,6 +1,11 @@
 {% extends "layouts/default.html.j2" %}
 
 {% block page_title %}Pools List{% endblock %}
+{% block extra_menus %}
+    <a x-data="{mgrUrl: qparams.get('mgr')}" :href="nodesUrl(mgrUrl)" class="navbar-item">
+        Nodes
+    </a>
+{% endblock %}
 {% block body %}
     <div x-data="data" class="p-4">
         {% with %}
@@ -15,41 +20,55 @@
                         No Storage pools yet!
                     </p>
                     <p class="subtitle">
-                        Start creating Pools as you wish. Dev, Prod, Staging...
+                        Start creating Pools.
                     </p>
                     <button class="button is-primary my-3" @click="showWelcome = false; showCreatePool = true">Create</button>
                     <p class="help"></p>
-                    <img src="/static/undraw_inspiration_re_ivlv.svg" class="mt-6"/>
+                    <img src="/static/undraw_ideas_re_7twj.svg" class="mt-6"/>
                 </div>
             </section>
         </div>
 
-        <div class="modal" :class="showCreatePool ? 'is-active' : ''"  @keydown.escape.window="resetForm()">
-            <div class="modal-background"></div>
-            <div class="modal-card">
-                <header class="modal-card-head">
-                    <p class="modal-card-title">Create a Storage Pool</p>
-                    <button class="delete" @click="resetForm()" aria-label="close"></button>
-                </header>
-                <section class="modal-card-body">
-                    <article class="message is-danger" x-show="error != ''">
-                        <div class="message-body" x-text="error"></div>
-                    </article>
-                    <div class="field">
-                        <label class="label">Name</label>
-                        <div class="control">
-                            <input class="input" x-model="poolName" type="text" placeholder="Dev">
-                        </div>
-                    </div>
-                </section>
-                <footer class="modal-card-foot">
-                    <button class="button is-link" @click="createPool()">Create</button>
-                    <button class="button is-link is-light" @click="resetForm()">Cancel</button>
-                </footer>
-            </div>
+        <div class="modal" :class="showCreatePool ? 'is-active' : ''">
+            {% include "partials/pool_create.html" %}
         </div>
 
-        <h1 class="is-size-5 mb-4 px-2" x-show="pools.length > 0">
+        <nav class="level has-background-primary-light py-4" x-show="pools.length > 0">
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Pools</p>
+                    <p class="title is-size-5" x-text="pools.length"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <a :href="nodesUrl(mgrUrl, pool)">
+                        <p class="heading">Nodes</p>
+                        <p class="title is-size-5" x-text="nodes.length"></p>
+                    </a>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Storage Units</p>
+                    <p class="title is-size-5" x-text="poolsStorageUnitsCount(pools)"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Utilization</p>
+                    <div class="title is-size-5" style="position: relative">
+                        <div class="px-2" x-text="poolUtilization(pools)"></div>
+                        <div class="px-2 is-size-7 has-text-grey" x-text="`${poolSizePercentage(pools)}%`"></div>
+                        <div class="number-bar-in-header">
+                            <div :style="{width: `${poolSizePercentage(pools)}%`, 'background-color': numberBarColor(poolSizePercentage(pools))}" class="number-bar-inner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <h1 class="is-size-5 mb-4 px-2"  x-show="pools.length > 0">
             List of Pools
             <button class="button is-primary is-small is-clickable ml-2"
                     title="Create a Pool"
@@ -61,54 +80,64 @@
                 <span>Create</span>
             </button>
         </h1>
-
         <div class="columns is-multiline">
             <template x-for="(pool, idx) in pools">
                 <div class="column is-4-tablet is-3-widescreen">
-                    <div class="card" style="position: relative">
+                    <div class="card is-3">
                         <article class="message is-danger" x-show="cardErrors[idx] != '' && cardErrors[idx] != undefined">
                             <div class="message-body">
                                 <p class="has-text-right"><button class="delete" aria-label="delete" @click="cardErrors[idx] = ''"></button></p>
                                 <p x-html="cardErrors[idx]"></p>
                             </div>
                         </article>
-                        <div class="has-text-right" style="position:absolute; right: 0" x-data="{dropdownShowing: false}">
+                        <div class="has-text-right" x-data="{dropdownShowing: false}">
                             <div class="dropdown is-right" :class="dropdownShowing ? 'is-active' : ''">
                                 <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
                                 <div class="dropdown-menu has-text-left" role="menu">
                                     <div class="dropdown-content">
-                                        <a class="dropdown-item" @click="deletePool(idx)" x-html="`<span class='has-text-danger'>${SVG_DELETE}</span> Delete`">
+                                        <a class="dropdown-item" @click="startPool(idx)" x-html="poolStartButton(pool, idx)"></a>
+                                        <a class="dropdown-item" @click="stopPool(idx)">
+                                            <span x-html="poolStopButton(pool, idx)"></span>
+                                        </a>
+                                        <a class="dropdown-item" @click="deletePool(idx)">
+                                            <span x-html="poolDeleteButton(pool, idx)"></span>
                                         </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-content">
+                        <div class="card-content is-clickable" @click="location.href=poolUrl(pool)">
                             <div class="media">
                                 <div class="media-left">
                                     <figure class="image is-32x32" x-html="uuidThumbmail(pool.id)">
                                     </figure>
                                 </div>
                                 <div class="media-content">
-                                    <p class="title is-5" x-text="pool.name"></p>
-                                    <p class="subtitle is-7" x-text="pool.id"></p>
+                                    <p class="title is-5" x-html="poolNameAndStatus(pool)"></p>
+                                    <p class="subtitle">
+                                        <div class="is-size-7" x-text="pool.id"></div>
+                                        <div class="is-size-7" x-text="poolType(pool)"></div>
+                                    </p>
                                 </div>
                             </div>
-                            <div class="content has-background-light">
-                                <nav class="level p-2">
-                                    <div class="level-item has-text-centered">
-                                        <a :href="volumesUrl(mgrUrl, pool)">
-                                            <p class="heading">Volumes</p>
-                                            <p class="title" x-text="pool.volumes_count"></p>
-                                        </a>
+                            <div class="content">
+                                <div style="position: relative">
+                                    <div class="px-2" x-text="humanize(pool.metrics.size_used_bytes, true) + '/' + humanize(pool.metrics.size_bytes, true)"></div>
+                                    <div class="px-2 is-size-7 has-text-grey" x-text="`${sizePercentage(pool)}%`"></div>
+                                    <div class="number-bar">
+                                        <div :style="{width: `${sizePercentage(pool)}%`, 'background-color': numberBarColor(sizePercentage(pool))}" class="number-bar-inner"></div>
                                     </div>
-                                    <div class="level-item has-text-centered">
-                                        <a :href="nodesUrl(mgrUrl, pool)">
-                                            <p class="heading">Nodes</p>
-                                            <p class="title" x-text="pool.nodes_count"></p>
-                                        </a>
+                                </div>
+                                <p class="subtitle is-6">Utilization</p>
+
+                                <div style="position: relative">
+                                    <div class="px-2" x-text="humanize(pool.metrics.inodes_used_count) + '/' + humanize(pool.metrics.inodes_count)"></div>
+                                    <div class="px-2 is-size-7 has-text-grey" x-text="`${inodesPercentage(pool)}%`"></div>
+                                    <div class="number-bar">
+                                        <div :style="{width: `${inodesPercentage(pool)}%`, 'background-color': numberBarColor(inodesPercentage(pool))}" class="number-bar-inner"></div>
                                     </div>
-                                </nav>
+                                </div>
+                                <p class="subtitle is-6">Inodes</p>
                             </div>
                         </div>
                     </div>
@@ -122,55 +151,51 @@
 
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
-             error: "",
              linkName: "pools",
              mgrUrl: qparams.get("mgr"),
+             poolName: qparams.get("pool"),
              pools: [],
-             showWelcome: false,
+             nodes: [],
              showCreateButton: true,
              showCreatePool: false,
-             poolName: "",
+             showWelcome: false,
+             error: "",
+             pool: {},
              cardErrors: {},
-             resetForm() {
-                 this.showCreatePool = false;
-                 this.poolName = '';
-                 this.showWelcome=true
-                 this.error = "";
+             mgr: null,
+             poolUrl(pool) {
+                 return `/pool?mgr=${this.mgrUrl}&pool=${pool.name}`;
              },
-             async init() {
-                 const mgr = storageManagerFromCookies(this.mgrUrl);
+             async startPool(idx) {
+                 var pool = this.pools[idx];
                  try {
-                     this.pools = await mgr.listPools();
-                     if (this.pools.length == 0) {
-                         this.showWelcome = true;
-                     }
+                     await this.mgr.pool(pool.name).start();
+                     this.pools[idx] = await this.mgr.pool(pool.name).get(true);
                  } catch (error) {
-                     authErrorRedirectHandle(this.mgrUrl, error)
-                     this.error = error;
-                 }
-             },
-             async createPool() {
-                 if (this.poolName.trim() == "") {
-                     this.error = "Pool name is empty";
-                     return
-                 }
-
-                 const mgr = storageManagerFromCookies(this.mgrUrl);
-                 try {
-                     await mgr.createPool(this.poolName);
-                     this.pools = await mgr.listPools();
-                     this.poolName = "";
-                     this.error = "";
-                     this.showCreatePool = false;
-                     this.message = "Pool added successfully!";
-                     this.showCreateButton = true;
+                     authErrorRedirectHandle(this.mgrUrl, error);
+                     this.cardErrors[idx] = `Failed to start the pool.<br/>${error}`
                      var obj = this
                      setTimeout(function() {
-                         obj.message = "";
-                     }, 5000);
+                         obj.cardErrors[idx] = "";
+                     }, 7000);
+                 }
+             },
+             async stopPool(idx) {
+                 var pool = this.pools[idx];
+                 if (!confirm(`Are you sure want to stop the Pool "${pool.name}"?`)) {
+                     return;
+                 }
+
+                 try {
+                     await this.mgr.pool(pool.name).stop();
+                     this.pools[idx] = await this.mgr.pool(pool.name).get(true);
                  } catch (error) {
-                     authErrorRedirectHandle(this.mgrUrl, error)
-                     this.error = error;
+                     authErrorRedirectHandle(this.mgrUrl, error);
+                     this.cardErrors[idx] = `Failed to stop the pool.<br/>${error}`
+                     var obj = this
+                     setTimeout(function() {
+                         obj.cardErrors[idx] = "";
+                     }, 7000);
                  }
              },
              async deletePool(idx) {
@@ -178,25 +203,36 @@
                  if (!confirm(`Are you sure want to delete the Pool "${pool.name}"?`)) {
                      return;
                  }
-                 const mgr = storageManagerFromCookies(this.mgrUrl);
+
                  try {
-                     await mgr.pool(pool.name).delete();
+                     await this.mgr.pool(pool.name).delete();
+                     this.pools = this.pools.filter(function(value, index, arr){
+                         return value.name != pool.name;
+                     });
+
+                     if (this.pools.length == 0){
+                        this.showWelcome = true;
+                     }
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
-                     this.cardErrors[idx] = `Failed to delete the Pool.<br/>${error}`
+                     this.cardErrors[idx] = `Failed to delete the pool.<br/>${error}`
                      var obj = this
                      setTimeout(function() {
                          obj.cardErrors[idx] = "";
                      }, 7000);
-                     return;
                  }
-
-                 this.pools = this.pools.filter(function(value, index, arr){
-                     return value.name != pool.name;
-                 });
-
-                 if (this.pools.length == 0){
-                    this.showWelcome = true;
+             },
+             async init() {
+                 this.mgr = storageManagerFromCookies(this.mgrUrl);
+                 try {
+                     this.pools = await this.mgr.listPools(true);
+                     if (this.pools.length === 0) {
+                         this.showWelcome = true;
+                     }
+                     this.nodes = await this.mgr.listNodes();
+                 } catch (error) {
+                     authErrorRedirectHandle(this.mgrUrl, error);
+                     this.error = error;
                  }
              }
          }))

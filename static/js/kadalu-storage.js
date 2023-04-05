@@ -7,120 +7,53 @@
     }
   };
 
-  // volumes.js
-  var Volume = class {
-    constructor(mgr, pool_name, name) {
-      this.mgr = mgr;
-      this.pool_name = pool_name;
-      this.name = name;
-    }
-    static async create(mgr, pool_name, name, distribute_groups, opts) {
-      return await mgr.httpPost(`/api/v1/pools/${pool_name}/volumes`, {
-        name,
-        distribute_groups,
-        no_start: opts["no_start"] !== void 0 ? opts["no_start"] : false,
-        volume_id: opts["volume_id"] !== void 0 ? opts["volume_id"] : "",
-        auto_create_pool: opts["auto_create_pool"] !== void 0 ? opts["auto_create_pool"] : false,
-        auto_add_nodes: opts["auto_add_nodes"] !== void 0 ? opts["auto_add_nodes"] : false,
-        options: opts["options"] !== void 0 ? opts["options"] : {}
-      });
-    }
-    static async list(mgr, pool_name, state = false) {
-      return await mgr.httpGet(`/api/v1/pools/${pool_name}/volumes?state=${state ? 1 : 0}`);
-    }
-    async get(state = false) {
-      return await this.mgr.httpGet(
-        `/api/v1/pools/${this.pool_name}/volumes/${this.name}?state=${state ? 1 : 0}`
-      );
-    }
-    async start() {
-      return await this.mgr.httpPost(
-        `/api/v1/pools/${this.pool_name}/volumes/${this.name}/start`,
-        {}
-      );
-    }
-    async stop() {
-      return await this.mgr.httpPost(
-        `/api/v1/pools/${this.pool_name}/volumes/${this.name}/stop`,
-        {}
-      );
-    }
-    async delete() {
-      return this.mgr.httpDelete(
-        `/api/v1/pools/${this.pool_name}/volumes/${this.name}`
-      );
-    }
-  };
-
-  // nodes.js
-  var Node = class {
-    constructor(mgr, pool_name, name) {
-      this.mgr = mgr;
-      this.pool_name = pool_name;
-      this.name = name;
-    }
-    static async add(mgr, pool_name, name, endpoint = "") {
-      return await mgr.httpPost(
-        `/api/v1/pools/${pool_name}/nodes`,
-        { name, endpoint }
-      );
-    }
-    static async list(mgr, pool_name, state = false) {
-      return await mgr.httpGet(`/api/v1/pools/${pool_name}/nodes?state=${state ? 1 : 0}`);
-    }
-    async get(state = false) {
-      return await this.mgr.httpGet(
-        `/api/v1/pools/${this.pool_name}/nodes/${this.name}?state=${state ? 1 : 0}`
-      );
-    }
-    async remove() {
-      return this.mgr.httpDelete(
-        `/api/v1/pools/${this.pool_name}/nodes/${this.name}`
-      );
-    }
-  };
-
   // pools.js
   var Pool = class {
     constructor(mgr, name) {
       this.mgr = mgr;
       this.name = name;
     }
-    static async create(mgr, name) {
-      return await mgr.httpPost("/api/v1/pools", { name });
+    static async create(mgr, name, distribute_groups, opts) {
+      return await mgr.httpPost(`/api/v1/pools`, {
+        name,
+        distribute_groups,
+        no_start: opts["no_start"] !== void 0 ? opts["no_start"] : false,
+        distribute: opts["distribute"] !== void 0 ? opts["distribute"] : false,
+        pool_id: opts["pool_id"] !== void 0 ? opts["pool_id"] : "",
+        auto_add_nodes: opts["auto_add_nodes"] !== void 0 ? opts["auto_add_nodes"] : false,
+        options: opts["options"] !== void 0 ? opts["options"] : {}
+      });
     }
-    static async list(mgr) {
-      return await mgr.httpGet("/api/v1/pools");
+    static async list(mgr, state = false) {
+      return await mgr.httpGet(`/api/v1/pools?state=${state ? 1 : 0}`);
     }
-    async listVolumes(state = false) {
-      return await Volume.list(this.mgr, this.name, state);
+    async get(state = false) {
+      return await this.mgr.httpGet(
+        `/api/v1/pools/${this.name}?state=${state ? 1 : 0}`
+      );
     }
-    async get() {
-      return await this.mgr.httpGet(`/api/v1/pools/${this.name}`);
+    async start() {
+      return await this.mgr.httpPost(
+        `/api/v1/pools/${this.name}/start`,
+        {}
+      );
     }
-    async delete() {
-      return await this.mgr.httpDelete(`/api/v1/pools/${this.name}`);
-    }
-    volume(name) {
-      return new Volume(this.mgr, this.name, name);
-    }
-    node(name) {
-      return new Node(this.mgr, this.name, name);
-    }
-    async addNode(name, endpoint = "") {
-      return await Node.add(this.mgr, this.name, name, endpoint);
-    }
-    async listNodes(state = false) {
-      return await Node.list(this.mgr, this.name, state);
+    async stop() {
+      return await this.mgr.httpPost(
+        `/api/v1/pools/${this.name}/stop`,
+        {}
+      );
     }
     async rename(newName) {
       return this.mgr.httpPost(
         `/api/v1/pools/${this.name}/rename`,
-        { new_pool_name: newName }
+        { new_name: newName }
       );
     }
-    async createVolume(name, distribute_groups, opts) {
-      return await Volume.create(this.mgr, this.name, name, distribute_groups, opts);
+    async delete() {
+      return this.mgr.httpDelete(
+        `/api/v1/pools/${this.name}`
+      );
     }
   };
 
@@ -139,6 +72,33 @@
     }
     static async hasUsers(mgr) {
       return await mgr.httpGet("/api/v1/user-exists", true);
+    }
+  };
+
+  // nodes.js
+  var Node = class {
+    constructor(mgr, name) {
+      this.mgr = mgr;
+      this.name = name;
+    }
+    static async add(mgr, name, endpoint = "") {
+      return await mgr.httpPost(
+        `/api/v1/nodes`,
+        { name, endpoint }
+      );
+    }
+    static async list(mgr, state = false) {
+      return await mgr.httpGet(`/api/v1/nodes?state=${state ? 1 : 0}`);
+    }
+    async get(state = false) {
+      return await this.mgr.httpGet(
+        `/api/v1/nodes/${this.name}?state=${state ? 1 : 0}`
+      );
+    }
+    async remove() {
+      return this.mgr.httpDelete(
+        `/api/v1/nodes/${this.name}`
+      );
     }
   };
 
@@ -255,14 +215,23 @@
       this.token = "";
       return;
     }
-    async listPools() {
-      return await Pool.list(this);
+    async listPools(state = false) {
+      return await Pool.list(this, state);
     }
     pool(name) {
       return new Pool(this, name);
     }
-    async createPool(name) {
-      return await Pool.create(this, name);
+    node(name) {
+      return new Node(this, name);
+    }
+    async addNode(name, endpoint = "") {
+      return await Node.add(this, name, endpoint);
+    }
+    async listNodes(state = false) {
+      return await Node.list(this, state);
+    }
+    async createPool(name, distribute_groups, opts) {
+      return await Pool.create(this, name, distribute_groups, opts);
     }
     async createUser(username, password, fullName = "") {
       return await User.create(this, username, password, fullName);

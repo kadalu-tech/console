@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="icon" type="image/png" href="/static/favicon.png"/>
-        <title>Volume detail - Kadalu Storage Console</title>
+        <title>Pool detail - Kadalu Storage Console</title>
         <link rel="stylesheet" href="/static/css/stylesheet.css">
         <link rel="stylesheet" href="/static/css/app.css">
         <script src="/static/js/kadalu-storage.js"></script>
@@ -39,6 +39,11 @@
                     <a href="https://kadalu.tech" class="navbar-item">
                         kadalu.tech
                     </a>
+                    
+    <a x-data="{mgrUrl: qparams.get('mgr')}" :href="nodesUrl(mgrUrl)" class="navbar-item">
+        Nodes
+    </a>
+
                 </div>
 
                 <div class="navbar-end">
@@ -80,7 +85,7 @@
 
         <div class="" style="min-height: 80vh">
             
-    <div x-data="data" x-init="getVolume" class="p-4">
+    <div x-data="data" x-init="getPool" class="p-4">
         
             
             <div class="columns">
@@ -93,26 +98,14 @@
                 
                     
                     
-                        <li><a :href="'/pools?mgr=' + mgrUrl" >Pools</a></li>
+                        <li><a :href="`/pools?mgr=${mgrUrl}`" >Pools</a></li>
                     
                 
                     
                         
                     
                     
-                        <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`"  x-text="poolName" ></a></li>
-                    
-                
-                    
-                    
-                        <li><a :href="`/volumes?mgr=${mgrUrl}&pool=${poolName}`" >Volumes</a></li>
-                    
-                
-                    
-                        
-                    
-                    
-                        <li class="is-active"><a href="#" aria-current="page"  x-text="volumeName" ></a></li>
+                        <li class="is-active"><a href="#" aria-current="page"  x-text="poolName" ></a></li>
                     
                 
             </ul>
@@ -146,23 +139,23 @@
             <div class="level-item has-text-centered">
                 <div>
                     <p class="heading">Nodes</p>
-                    <p class="title is-size-5" x-text="volumeNodesCount(volume)"></p>
+                    <p class="title is-size-5" x-text="poolNodesCount(pool)"></p>
                 </div>
             </div>
             <div class="level-item has-text-centered">
                 <div>
                     <p class="heading">Storage Units</p>
-                    <p class="title is-size-5" x-text="volumeStorageUnitsCount(volume)"></p>
+                    <p class="title is-size-5" x-text="poolStorageUnitsCount(pool)"></p>
                 </div>
             </div>
             <div class="level-item has-text-centered">
                 <div>
                     <p class="heading">Utilization</p>
                     <div class="title is-size-5" style="position: relative">
-                        <div class="px-2" x-text="humanize(volume.metrics.size_used_bytes, true) + '/' + humanize(volume.metrics.size_bytes, true)"></div>
-                        <div class="px-2 is-size-7 has-text-grey" x-text="`${sizePercentage(volume)}%`"></div>
+                        <div class="px-2" x-text="humanize(pool.metrics.size_used_bytes, true) + '/' + humanize(pool.metrics.size_bytes, true)"></div>
+                        <div class="px-2 is-size-7 has-text-grey" x-text="`${sizePercentage(pool)}%`"></div>
                         <div class="number-bar">
-                            <div :style="{width: `${sizePercentage(volume)}%`, 'background-color': numberBarColor(sizePercentage(volume))}" class="number-bar-inner"></div>
+                            <div :style="{width: `${sizePercentage(pool)}%`, 'background-color': numberBarColor(sizePercentage(pool))}" class="number-bar-inner"></div>
                         </div>
                     </div>
                 </div>
@@ -171,22 +164,22 @@
                 <div>
                     <p class="heading">Inodes</p>
                     <div class="title is-size-5" style="position: relative">
-                        <div class="px-2" x-text="humanize(volume.metrics.inodes_used_count) + '/' + humanize(volume.metrics.inodes_count)"></div>
-                        <div class="px-2 is-size-7 has-text-grey" x-text="`${inodesPercentage(volume)}%`"></div>
+                        <div class="px-2" x-text="humanize(pool.metrics.inodes_used_count) + '/' + humanize(pool.metrics.inodes_count)"></div>
+                        <div class="px-2 is-size-7 has-text-grey" x-text="`${inodesPercentage(pool)}%`"></div>
                         <div class="number-bar">
-                            <div :style="{width: `${inodesPercentage(volume)}%`, 'background-color': numberBarColor(inodesPercentage(volume))}" class="number-bar-inner"></div>
+                            <div :style="{width: `${inodesPercentage(pool)}%`, 'background-color': numberBarColor(inodesPercentage(pool))}" class="number-bar-inner"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </nav>
 
-        <h1 class="is-size-5 mb-4 px-2" x-show="volumeStorageUnitsCount(volume) > 0">
+        <h1 class="is-size-5 mb-4 px-2" x-show="poolStorageUnitsCount(pool) > 0">
             List of Storage Units
         </h1>
 
         <div class="columns is-multiline">
-            <template x-for="distGroup in volume.distribute_groups">
+            <template x-for="distGroup in pool.distribute_groups">
                 <template x-for="storageUnit in distGroup.storage_units">
 
                     <div class="column is-4-tablet is-3-widescreen">
@@ -238,15 +231,14 @@
 
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
-             linkName: "volume",
+             linkName: "pool",
              mgrUrl: qparams.get("mgr"),
              poolName: qparams.get("pool"),
-             volumeName: qparams.get("volume"),
-             volume: {distribute_groups: [], metrics: {}},
-             async getVolume() {
+             pool: {distribute_groups: [], metrics: {}},
+             async getPool() {
                  const mgr = storageManagerFromCookies(this.mgrUrl);
                  try {
-                     this.volume = await mgr.pool(this.poolName).volume(this.volumeName).get(true);
+                     this.pool = await mgr.pool(this.poolName).get(true);
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
                      this.error = error;

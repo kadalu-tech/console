@@ -39,6 +39,11 @@
                     <a href="https://kadalu.tech" class="navbar-item">
                         kadalu.tech
                     </a>
+                    
+    <a x-data="{mgrUrl: qparams.get('mgr')}" :href="nodesUrl(mgrUrl)" class="navbar-item">
+        Nodes
+    </a>
+
                 </div>
 
                 <div class="navbar-end">
@@ -130,41 +135,434 @@
                         No Storage pools yet!
                     </p>
                     <p class="subtitle">
-                        Start creating Pools as you wish. Dev, Prod, Staging...
+                        Start creating Pools.
                     </p>
                     <button class="button is-primary my-3" @click="showWelcome = false; showCreatePool = true">Create</button>
                     <p class="help"></p>
-                    <img src="/static/undraw_inspiration_re_ivlv.svg" class="mt-6"/>
+                    <img src="/static/undraw_ideas_re_7twj.svg" class="mt-6"/>
                 </div>
             </section>
         </div>
 
-        <div class="modal" :class="showCreatePool ? 'is-active' : ''"  @keydown.escape.window="resetForm()">
+        <div class="modal" :class="showCreatePool ? 'is-active' : ''">
             <div class="modal-background"></div>
-            <div class="modal-card">
-                <header class="modal-card-head">
-                    <p class="modal-card-title">Create a Storage Pool</p>
-                    <button class="delete" @click="resetForm()" aria-label="close"></button>
-                </header>
-                <section class="modal-card-body">
-                    <article class="message is-danger" x-show="error != ''">
-                        <div class="message-body" x-text="error"></div>
-                    </article>
-                    <div class="field">
-                        <label class="label">Name</label>
-                        <div class="control">
-                            <input class="input" x-model="poolName" type="text" placeholder="Dev">
-                        </div>
-                    </div>
-                </section>
-                <footer class="modal-card-foot">
-                    <button class="button is-link" @click="createPool()">Create</button>
-                    <button class="button is-link is-light" @click="resetForm()">Cancel</button>
-                </footer>
+<div class="modal-card" x-data="pool_create_data" @keydown.escape.window="resetForm()">
+    <header class="modal-card-head">
+        <p class="modal-card-title">Create a Pool</p>
+        <button class="delete" @click="resetForm()" aria-label="close"></button>
+    </header>
+    <section class="modal-card-body">
+        <div class="has-text-right" x-show="req.nodes.length > 0 && !showingAddNodes"><a @click="showingAddNodes = true" title="Auto add new nodes">New nodes</a></div>
+        <div x-show="req.nodes.length == 0 || showingAddNodes" class="has-background-info-light p-4 mb-6">
+            <div class="has-text-right" style="min-height: 30px">
+                <button class="delete" x-show="req.nodes.length > 0 && req.newNodes == ''" @click="showingAddNodes = false" aria-label="close"></button>
             </div>
+            <p><span x-show="req.nodes.length == 0">No nodes added to this Pool.</span> Automatically add nodes while creating the pool if it is not already added to the cluster</p>
+            <div class="field">
+                <div class="control">
+                    <input class="input" x-model="req.newNodes" type="text"
+                           @input="updateStorageUnits()"
+                           placeholder="node1.example.com,node2.example.com">
+                </div>
+            </div>
+            <p class=""><strong>Note</strong>: Automatic nodes addition is only possible if the node's endpoints are default endpoint.</p>
+        </div>
+        <form @submit.prevent="createPool">
+            <div class="field">
+                <label class="label">Pool Name</label>
+                <div class="control">
+                    <input class="input" x-model="req.name" type="text"
+                           placeholder="data">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Pool Type</label>
+                <div class="control">
+                    <div class="select">
+                        <select x-model="req.type" @change="updateStorageUnits()">
+                            <option>Distribute</option>
+                            <option>Replica 2</option>
+                            <option>Replica 3</option>
+                            <option>Disperse</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field" x-show="req.type == 'Disperse'">
+                <label class="label">Data</label>
+                <div class="select">
+                    <select x-model="req.disperseData" @change="updateStorageUnits()">
+                        <template x-for="count in [2, 4, 5, 6, 7, 8, 9, 10]">
+                            <option x-text="count"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <div class="field" x-show="req.type == 'Disperse'">
+                <label class="label">Redundancy</label>
+                <div class="select">
+                    <select x-model="req.disperseRedundancy" @change="updateStorageUnits()">
+                        <template x-for="count in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]">
+                            <option x-text="count"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="checkbox">
+                    <input type="checkbox" x-model="req.isCommonPath">
+                    Use common path for all the Storage units of this Pool.
+                </label>
+            </div>
+            <div class="field" x-show="req.isCommonPath">
+                <label class="label">Common Path</label>
+                <div class="control">
+                    <input class="input" x-model="req.commonPath" type="text" :placeholder="`/data/${req.name}`">
+                </div>
+            </div>
+
+            <template x-for="(gid, idx) in req.distributeGroupsIds">
+                <div class="has-background-info-light p-2 mb-2">
+                    <div class="has-text-right">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon is-small" :class="idx == 0 ? 'has-text-grey-light' : 'has-text-dark is-clickable'" @click="distributeGroupmoveUp(idx)">
+                            <path fill-rule="evenodd" d="M11.47 7.72a.75.75 0 011.06 0l7.5 7.5a.75.75 0 11-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 01-1.06-1.06l7.5-7.5z" clip-rule="evenodd" />
+                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon is-small" :class="idx == (req.distributeGroupsIds.length - 1) ? 'has-text-grey-light' : 'has-text-dark is-clickable'" @click="distributeGroupmoveDown(idx)">
+                            <path fill-rule="evenodd" d="M12.53 16.28a.75.75 0 01-1.06 0l-7.5-7.5a.75.75 0 011.06-1.06L12 14.69l6.97-6.97a.75.75 0 111.06 1.06l-7.5 7.5z" clip-rule="evenodd" />
+                        </svg>
+                        <button class="delete is-small" @click="removeDistributeGroup(gid)"></button>
+                    </div>
+                    <p class="is-size-6">Distribute Group <span x-text="idx + 1"></span></p>
+                    <template x-for="(storageUnit, sIdx) in req.distributeGroups[gid]">
+                        <div class="field has-addons">
+                            <div class="control">
+                                <div class="select">
+                                    <select x-model="storageUnit.node" >
+                                        <option>Select</option>
+                                        <template x-for="node in req.nodes.concat(newNodesList())">
+                                            <option x-text="node"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="control">
+                                <input class="input" x-model="storageUnit.path"
+                                       type="text"
+                                       :class="req.isCommonPath ? 'is-static' : ''"
+                                       :placeholder="getStorageUnitPlaceholder(idx*req.distributeGroups[gid].length + sIdx)">
+                            </div>
+                            <div class="control has-icons-right">
+                                <input class="input" x-model="storageUnit.port"
+                                       type="text"
+                                       x-show="storageUnit.portManual"
+                                       placeholder="Port: auto">
+                                <span class="icon is-small is-right">
+                                    <button class="delete is-small" x-show="storageUnit.portManual" @click="storageUnit.portManual=false; storageUnit.port = ''"></button>
+                                </span>
+                                <p @click="storageUnit.portManual=true" x-show="!storageUnit.portManual" class="is-clickable p-2 is-size-small has-text-link">Port: auto</p>
+                            </div>
+                        </div>
+                    </template>
+                    <div class="has-text-right" x-show="idx == (req.distributeGroupsIds.length - 1)">
+                        <a class="button" @click="addDistributeGroup()">+</a>
+                    </div>
+                </div>
+            </template>
+
+            <div class="">
+                <div class="field">
+                    <label class="checkbox">
+                        <input type="checkbox" x-model="req.noStart">
+                        Do not start the Pool after create
+                    </label>
+                </div>
+            </div>
+            <article class="message is-danger mt-2" x-show="error != ''">
+                <div class="message-body" x-html="error"></div>
+            </article>
+            <div class="container has-background-warning-light p-4 mt-4" x-html="reqSummary()"></div>
+        </form>
+    </section>
+    <footer class="modal-card-foot">
+        <button class="button is-link" @click="createPool()">Create</button>
+        <button class="button is-link is-light" @click="resetForm()">Cancel</button>
+    </footer>
+</div>
+<script>
+ document.addEventListener('alpine:init', () => {
+     Alpine.data('pool_create_data', () => ({
+         req: {
+             name: "",
+             type: "Distribute",
+             isCommonPath: false,
+             commonPath: "",
+             nodes: [],
+             newNodes: "",
+             allNodes: [],
+             disperseData: 2,
+             disperseRedundancy: 1,
+             noStart: false,
+             distributeGroups: {},
+             distributeGroupsIds: []
+         },
+         showingAddNodes: false,
+         newNodesList() {
+             var nodes = this.req.newNodes.split(",").map((node) => node.trim());
+             return nodes.filter(function(value, index, arr){
+                 return value != ""
+             });
+         },
+         distributeGroupmoveUp(idx) {
+             if (idx == 0) {
+                 return;
+             }
+             var newGrps = this.req.distributeGroupsIds.slice(0, idx-1);
+             newGrps.push(this.req.distributeGroupsIds[idx]);
+             newGrps.push(this.req.distributeGroupsIds[idx-1]);
+             this.req.distributeGroupsIds = newGrps.concat(this.req.distributeGroupsIds.slice(idx+1));
+         },
+         distributeGroupmoveDown(idx) {
+             if (idx == (this.req.distributeGroupsIds.length - 1)) {
+                 return;
+             }
+             var newGrps = this.req.distributeGroupsIds.slice(0, idx);
+             newGrps.push(this.req.distributeGroupsIds[idx+1]);
+             newGrps.push(this.req.distributeGroupsIds[idx]);
+             this.req.distributeGroupsIds = newGrps.concat(this.req.distributeGroupsIds.slice(idx+2));
+         },
+         updateStorageUnits() {
+             var groupSize = this.getDistributeSize();
+             var nodes = this.req.nodes.concat(this.newNodesList());
+             for(var i=0; i<this.req.distributeGroupsIds.length; i++) {
+                 var gid = this.req.distributeGroupsIds[i];
+                 // Add new Storage units placeholders (Example: When new dist group
+                 // added or while changing Replica 2 to Replica 3
+                 for(var j=this.req.distributeGroups[gid].length; j<groupSize; j++) {
+                     this.req.distributeGroups[gid].push({
+                         node: 'Select',
+                         port: '',
+                         portManual: false,
+                         path: ''
+                     })
+                 }
+
+                 // Remove extra Storage units (Example: When changed from Replica 3 to Replica 2)
+                 this.req.distributeGroups[gid] = this.req.distributeGroups[gid].slice(0, groupSize);
+             }
+         },
+         addDistributeGroup() {
+             var gid = `${(new Date()).getTime()}`;
+             this.req.distributeGroupsIds.push(gid);
+             this.req.distributeGroups[gid] = [];
+             this.updateStorageUnits();
+         },
+         removeDistributeGroup(distGrpID) {
+             if (this.req.distributeGroupsIds.length == 1) {
+                 return;
+             }
+             this.req.distributeGroupsIds = this.req.distributeGroupsIds.filter(function(value, index, arr){
+                 return value != distGrpID;
+             });
+             delete this.req.distributeGroups[distGrpID];
+         },
+         resetForm() {
+             this.showCreatePool = false;
+             this.showWelcome=true;
+             this.error = "";
+         },
+         getTypeName() {
+             var pfx = '';
+             if (this.req.type != 'Distribute' && this.req.distributeGroupsIds.length > 1) {
+                 pfx = 'Distributed ';
+             }
+
+             var sfx = '';
+             if (this.req.type == 'Disperse') {
+                 sfx = `(data: ${this.req.disperseData}, redundancy: ${this.req.disperseRedundancy})`;
+             }
+             return `${pfx}${this.req.type}${sfx}`;
+         },
+         reqSummary() {
+             summary = `<p class="is-size-4">Summary</p>
+                <p class="">Name: ${this.req.name == '' ? '-' : this.req.name}</p>
+                <p class="">Type: ${this.getTypeName()}</p>
+                <p class="">Use common path: ${this.req.isCommonPath ? `Yes (${this.req.commonPath})` : 'No'}</p>
+                <p class="">Start Pool after create: ${this.req.noStart ? 'No' : 'Yes'}</p>
+                <p class="">Auto add new nodes: ${this.req.newNodes == '' ? '-' : this.req.newNodes}</p>
+                <p class="">Number of distribute groups: ${this.req.distributeGroupsIds.length}</p>`;
+
+             for (var i=0; i<this.req.distributeGroupsIds.length; i++) {
+                 var gid = this.req.distributeGroupsIds[i];
+                 summary += `<p>Distribute group ${i+1}</p>`;
+                 for (var j=0; j<this.req.distributeGroups[gid].length; j++) {
+                     var storageUnit = this.req.distributeGroups[gid][j];
+                     if (storageUnit.node != "Select") {
+                         summary += `<p class="ml-2">${this.getStorageUnitNode(storageUnit)}${this.getStorageUnitPort(storageUnit)}:${this.getStorageUnitPath(storageUnit)}</p>`
+                     }
+                 }
+             }
+             return summary;
+         },
+         getReplicaCount() {
+             if (this.req.type == 'Replica 2') {
+                 return 2;
+             }
+             if (this.req.type == 'Replica 3') {
+                 return 3;
+             }
+             return 0;
+         },
+         getDisperseCount() {
+             if (this.req.type != 'Disperse') {
+                 return 0;
+             }
+
+             return parseInt(this.req.disperseData, 10) + this.getRedundancyCount()
+         },
+         getRedundancyCount() {
+             if (this.req.type != 'Disperse') {
+                 return 0;
+             }
+
+             return parseInt(this.req.disperseRedundancy, 10);
+         },
+         getStorageUnitPath(storageUnit) {
+             if (this.req.isCommonPath) {
+                 return this.req.commonPath;
+             }
+             return storageUnit.path
+         },
+         getStorageUnitPort(storageUnit) {
+             if (storageUnit.port == '0' || storageUnit.port == '') {
+                 return '';
+             }
+
+             return `:${parseInt(storageUnit.port, 10)}`;
+         },
+         getStorageUnitNode(storageUnit) {
+             return storageUnit.node
+         },
+         async createPool() {
+             var req = {
+                 name: this.req.name,
+                 distribute_groups: [],
+                 no_start: this.req.noStart,
+                 auto_add_nodes: this.req.newNodes != ''
+             }
+             for (var i=0; i<this.req.distributeGroupsIds.length; i++) {
+                 var distGrp = {
+                     replica_count: this.getReplicaCount(),
+                     disperse_count: this.getDisperseCount(),
+                     redundancy_count: this.getRedundancyCount(),
+                     storage_units: [],
+                 };
+                 var gid = this.req.distributeGroupsIds[i];
+                 for (var j=0; j<this.req.distributeGroups[gid].length; j++) {
+                     var storageUnit = this.req.distributeGroups[gid][j];
+                     var p = this.getStorageUnitPort(storageUnit);
+                     distGrp.storage_units.push({
+                         path: this.getStorageUnitPath(storageUnit),
+                         port: p == '' ? 0: parseInt(p, 10),
+                         node: {
+                             name: this.getStorageUnitNode(storageUnit)
+                         }
+                     });
+                 }
+
+                 req.distribute_groups.push(distGrp);
+             }
+
+             try {
+                 await this.mgr.createPool(req.name, req.distribute_groups, req)
+                 this.pools.unshift(await this.mgr.pool(req.name).get(true))
+                 this.req.name = "";
+                 this.error = "";
+                 this.showCreatePool = false;
+                 this.message = "Pool created successfully!";
+                 this.showCreateButton = true;
+                 var obj = this
+                 setTimeout(function() {
+                     obj.message = "";
+                 }, 5000);
+             } catch (error) {
+                 authErrorRedirectHandle(this.mgrUrl, error);
+                 this.error = `Failed to create the pool.<br/>${error}`
+             }
+         },
+         getDistributeSize() {
+             if (this.req.type == "Replica 2") {
+                 return 2;
+             } else if (this.req.type == "Replica 3") {
+                 return 3;
+             } else if (this.req.type == "Disperse") {
+                 return this.getDisperseCount();
+             }
+
+             return 1;
+         },
+         getStorageUnitPlaceholder(idx) {
+             if (this.req.isCommonPath) {
+                 return this.req.commonPath;
+             }
+
+             return `/data/${this.req.name == '' ? 'POOL' : this.req.name}/s${idx}`;
+         },
+         async init() {
+             const mgr = storageManagerFromCookies(this.mgrUrl);
+             try {
+                 var nodes = await mgr.listNodes();
+                 this.req.nodes = nodes.map((node) => node.name);
+             } catch (error) {
+                 authErrorRedirectHandle(this.mgrUrl, error)
+                 this.req.nodes = [];
+             }
+             // Add first distribute group
+             this.addDistributeGroup();
+         }
+     }))
+ });
+</script>
         </div>
 
-        <h1 class="is-size-5 mb-4 px-2" x-show="pools.length > 0">
+        <nav class="level has-background-primary-light py-4" x-show="pools.length > 0">
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Pools</p>
+                    <p class="title is-size-5" x-text="pools.length"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <a :href="nodesUrl(mgrUrl, pool)">
+                        <p class="heading">Nodes</p>
+                        <p class="title is-size-5" x-text="nodes.length"></p>
+                    </a>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Storage Units</p>
+                    <p class="title is-size-5" x-text="poolsStorageUnitsCount(pools)"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Utilization</p>
+                    <div class="title is-size-5" style="position: relative">
+                        <div class="px-2" x-text="poolUtilization(pools)"></div>
+                        <div class="px-2 is-size-7 has-text-grey" x-text="`${poolSizePercentage(pools)}%`"></div>
+                        <div class="number-bar-in-header">
+                            <div :style="{width: `${poolSizePercentage(pools)}%`, 'background-color': numberBarColor(poolSizePercentage(pools))}" class="number-bar-inner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <h1 class="is-size-5 mb-4 px-2"  x-show="pools.length > 0">
             List of Pools
             <button class="button is-primary is-small is-clickable ml-2"
                     title="Create a Pool"
@@ -176,54 +574,64 @@
                 <span>Create</span>
             </button>
         </h1>
-
         <div class="columns is-multiline">
             <template x-for="(pool, idx) in pools">
                 <div class="column is-4-tablet is-3-widescreen">
-                    <div class="card" style="position: relative">
+                    <div class="card is-3">
                         <article class="message is-danger" x-show="cardErrors[idx] != '' && cardErrors[idx] != undefined">
                             <div class="message-body">
                                 <p class="has-text-right"><button class="delete" aria-label="delete" @click="cardErrors[idx] = ''"></button></p>
                                 <p x-html="cardErrors[idx]"></p>
                             </div>
                         </article>
-                        <div class="has-text-right" style="position:absolute; right: 0" x-data="{dropdownShowing: false}">
+                        <div class="has-text-right" x-data="{dropdownShowing: false}">
                             <div class="dropdown is-right" :class="dropdownShowing ? 'is-active' : ''">
                                 <div class="dropdown-trigger is-clickable" x-html="dropdownTrigger()"></div>
                                 <div class="dropdown-menu has-text-left" role="menu">
                                     <div class="dropdown-content">
-                                        <a class="dropdown-item" @click="deletePool(idx)" x-html="`<span class='has-text-danger'>${SVG_DELETE}</span> Delete`">
+                                        <a class="dropdown-item" @click="startPool(idx)" x-html="poolStartButton(pool, idx)"></a>
+                                        <a class="dropdown-item" @click="stopPool(idx)">
+                                            <span x-html="poolStopButton(pool, idx)"></span>
+                                        </a>
+                                        <a class="dropdown-item" @click="deletePool(idx)">
+                                            <span x-html="poolDeleteButton(pool, idx)"></span>
                                         </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-content">
+                        <div class="card-content is-clickable" @click="location.href=poolUrl(pool)">
                             <div class="media">
                                 <div class="media-left">
                                     <figure class="image is-32x32" x-html="uuidThumbmail(pool.id)">
                                     </figure>
                                 </div>
                                 <div class="media-content">
-                                    <p class="title is-5" x-text="pool.name"></p>
-                                    <p class="subtitle is-7" x-text="pool.id"></p>
+                                    <p class="title is-5" x-html="poolNameAndStatus(pool)"></p>
+                                    <p class="subtitle">
+                                        <div class="is-size-7" x-text="pool.id"></div>
+                                        <div class="is-size-7" x-text="poolType(pool)"></div>
+                                    </p>
                                 </div>
                             </div>
-                            <div class="content has-background-light">
-                                <nav class="level p-2">
-                                    <div class="level-item has-text-centered">
-                                        <a :href="volumesUrl(mgrUrl, pool)">
-                                            <p class="heading">Volumes</p>
-                                            <p class="title" x-text="pool.volumes_count"></p>
-                                        </a>
+                            <div class="content">
+                                <div style="position: relative">
+                                    <div class="px-2" x-text="humanize(pool.metrics.size_used_bytes, true) + '/' + humanize(pool.metrics.size_bytes, true)"></div>
+                                    <div class="px-2 is-size-7 has-text-grey" x-text="`${sizePercentage(pool)}%`"></div>
+                                    <div class="number-bar">
+                                        <div :style="{width: `${sizePercentage(pool)}%`, 'background-color': numberBarColor(sizePercentage(pool))}" class="number-bar-inner"></div>
                                     </div>
-                                    <div class="level-item has-text-centered">
-                                        <a :href="nodesUrl(mgrUrl, pool)">
-                                            <p class="heading">Nodes</p>
-                                            <p class="title" x-text="pool.nodes_count"></p>
-                                        </a>
+                                </div>
+                                <p class="subtitle is-6">Utilization</p>
+
+                                <div style="position: relative">
+                                    <div class="px-2" x-text="humanize(pool.metrics.inodes_used_count) + '/' + humanize(pool.metrics.inodes_count)"></div>
+                                    <div class="px-2 is-size-7 has-text-grey" x-text="`${inodesPercentage(pool)}%`"></div>
+                                    <div class="number-bar">
+                                        <div :style="{width: `${inodesPercentage(pool)}%`, 'background-color': numberBarColor(inodesPercentage(pool))}" class="number-bar-inner"></div>
                                     </div>
-                                </nav>
+                                </div>
+                                <p class="subtitle is-6">Inodes</p>
                             </div>
                         </div>
                     </div>
@@ -237,55 +645,51 @@
 
      document.addEventListener('alpine:init', () => {
          Alpine.data('data', () => ({
-             error: "",
              linkName: "pools",
              mgrUrl: qparams.get("mgr"),
+             poolName: qparams.get("pool"),
              pools: [],
-             showWelcome: false,
+             nodes: [],
              showCreateButton: true,
              showCreatePool: false,
-             poolName: "",
+             showWelcome: false,
+             error: "",
+             pool: {},
              cardErrors: {},
-             resetForm() {
-                 this.showCreatePool = false;
-                 this.poolName = '';
-                 this.showWelcome=true
-                 this.error = "";
+             mgr: null,
+             poolUrl(pool) {
+                 return `/pool?mgr=${this.mgrUrl}&pool=${pool.name}`;
              },
-             async init() {
-                 const mgr = storageManagerFromCookies(this.mgrUrl);
+             async startPool(idx) {
+                 var pool = this.pools[idx];
                  try {
-                     this.pools = await mgr.listPools();
-                     if (this.pools.length == 0) {
-                         this.showWelcome = true;
-                     }
+                     await this.mgr.pool(pool.name).start();
+                     this.pools[idx] = await this.mgr.pool(pool.name).get(true);
                  } catch (error) {
-                     authErrorRedirectHandle(this.mgrUrl, error)
-                     this.error = error;
-                 }
-             },
-             async createPool() {
-                 if (this.poolName.trim() == "") {
-                     this.error = "Pool name is empty";
-                     return
-                 }
-
-                 const mgr = storageManagerFromCookies(this.mgrUrl);
-                 try {
-                     await mgr.createPool(this.poolName);
-                     this.pools = await mgr.listPools();
-                     this.poolName = "";
-                     this.error = "";
-                     this.showCreatePool = false;
-                     this.message = "Pool added successfully!";
-                     this.showCreateButton = true;
+                     authErrorRedirectHandle(this.mgrUrl, error);
+                     this.cardErrors[idx] = `Failed to start the pool.<br/>${error}`
                      var obj = this
                      setTimeout(function() {
-                         obj.message = "";
-                     }, 5000);
+                         obj.cardErrors[idx] = "";
+                     }, 7000);
+                 }
+             },
+             async stopPool(idx) {
+                 var pool = this.pools[idx];
+                 if (!confirm(`Are you sure want to stop the Pool "${pool.name}"?`)) {
+                     return;
+                 }
+
+                 try {
+                     await this.mgr.pool(pool.name).stop();
+                     this.pools[idx] = await this.mgr.pool(pool.name).get(true);
                  } catch (error) {
-                     authErrorRedirectHandle(this.mgrUrl, error)
-                     this.error = error;
+                     authErrorRedirectHandle(this.mgrUrl, error);
+                     this.cardErrors[idx] = `Failed to stop the pool.<br/>${error}`
+                     var obj = this
+                     setTimeout(function() {
+                         obj.cardErrors[idx] = "";
+                     }, 7000);
                  }
              },
              async deletePool(idx) {
@@ -293,25 +697,36 @@
                  if (!confirm(`Are you sure want to delete the Pool "${pool.name}"?`)) {
                      return;
                  }
-                 const mgr = storageManagerFromCookies(this.mgrUrl);
+
                  try {
-                     await mgr.pool(pool.name).delete();
+                     await this.mgr.pool(pool.name).delete();
+                     this.pools = this.pools.filter(function(value, index, arr){
+                         return value.name != pool.name;
+                     });
+
+                     if (this.pools.length == 0){
+                        this.showWelcome = true;
+                     }
                  } catch (error) {
                      authErrorRedirectHandle(this.mgrUrl, error);
-                     this.cardErrors[idx] = `Failed to delete the Pool.<br/>${error}`
+                     this.cardErrors[idx] = `Failed to delete the pool.<br/>${error}`
                      var obj = this
                      setTimeout(function() {
                          obj.cardErrors[idx] = "";
                      }, 7000);
-                     return;
                  }
-
-                 this.pools = this.pools.filter(function(value, index, arr){
-                     return value.name != pool.name;
-                 });
-
-                 if (this.pools.length == 0){
-                    this.showWelcome = true;
+             },
+             async init() {
+                 this.mgr = storageManagerFromCookies(this.mgrUrl);
+                 try {
+                     this.pools = await this.mgr.listPools(true);
+                     if (this.pools.length === 0) {
+                         this.showWelcome = true;
+                     }
+                     this.nodes = await this.mgr.listNodes();
+                 } catch (error) {
+                     authErrorRedirectHandle(this.mgrUrl, error);
+                     this.error = error;
                  }
              }
          }))

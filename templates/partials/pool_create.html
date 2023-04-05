@@ -1,7 +1,7 @@
 <div class="modal-background"></div>
-<div class="modal-card" x-data="volume_create_data" @keydown.escape.window="resetForm()">
+<div class="modal-card" x-data="pool_create_data" @keydown.escape.window="resetForm()">
     <header class="modal-card-head">
-        <p class="modal-card-title">Create a Volume</p>
+        <p class="modal-card-title">Create a Pool</p>
         <button class="delete" @click="resetForm()" aria-label="close"></button>
     </header>
     <section class="modal-card-body">
@@ -10,7 +10,7 @@
             <div class="has-text-right" style="min-height: 30px">
                 <button class="delete" x-show="req.nodes.length > 0 && req.newNodes == ''" @click="showingAddNodes = false" aria-label="close"></button>
             </div>
-            <p><span x-show="req.nodes.length == 0">No nodes added to this Pool.</span> Automatically add nodes while creating the volume if it is not already added to the pool</p>
+            <p><span x-show="req.nodes.length == 0">No nodes added to this Pool.</span> Automatically add nodes while creating the pool if it is not already added to the cluster</p>
             <div class="field">
                 <div class="control">
                     <input class="input" x-model="req.newNodes" type="text"
@@ -20,16 +20,16 @@
             </div>
             <p class=""><strong>Note</strong>: Automatic nodes addition is only possible if the node's endpoints are default endpoint.</p>
         </div>
-        <form @submit.prevent="createVolume">
+        <form @submit.prevent="createPool">
             <div class="field">
-                <label class="label">Volume Name</label>
+                <label class="label">Pool Name</label>
                 <div class="control">
                     <input class="input" x-model="req.name" type="text"
                            placeholder="data">
                 </div>
             </div>
             <div class="field">
-                <label class="label">Volume Type</label>
+                <label class="label">Pool Type</label>
                 <div class="control">
                     <div class="select">
                         <select x-model="req.type" @change="updateStorageUnits()">
@@ -67,7 +67,7 @@
             <div class="field">
                 <label class="checkbox">
                     <input type="checkbox" x-model="req.isCommonPath">
-                    Use common path for all the Storage units of this Volume.
+                    Use common path for all the Storage units of this Pool.
                 </label>
             </div>
             <div class="field" x-show="req.isCommonPath">
@@ -129,7 +129,7 @@
                 <div class="field">
                     <label class="checkbox">
                         <input type="checkbox" x-model="req.noStart">
-                        Do not start the Volume after create
+                        Do not start the Pool after create
                     </label>
                 </div>
             </div>
@@ -140,13 +140,13 @@
         </form>
     </section>
     <footer class="modal-card-foot">
-        <button class="button is-link" @click="createVolume()">Create</button>
+        <button class="button is-link" @click="createPool()">Create</button>
         <button class="button is-link is-light" @click="resetForm()">Cancel</button>
     </footer>
 </div>
 <script>
  document.addEventListener('alpine:init', () => {
-     Alpine.data('volume_create_data', () => ({
+     Alpine.data('pool_create_data', () => ({
          req: {
              name: "",
              type: "Distribute",
@@ -222,7 +222,7 @@
              delete this.req.distributeGroups[distGrpID];
          },
          resetForm() {
-             this.showCreateVolume = false;
+             this.showCreatePool = false;
              this.showWelcome=true;
              this.error = "";
          },
@@ -240,10 +240,10 @@
          },
          reqSummary() {
              summary = `<p class="is-size-4">Summary</p>
-                <p class="">Name: ${this.poolName}/${this.req.name == '' ? '-' : this.req.name}</p>
+                <p class="">Name: ${this.req.name == '' ? '-' : this.req.name}</p>
                 <p class="">Type: ${this.getTypeName()}</p>
                 <p class="">Use common path: ${this.req.isCommonPath ? `Yes (${this.req.commonPath})` : 'No'}</p>
-                <p class="">Start Volume after create: ${this.req.noStart ? 'No' : 'Yes'}</p>
+                <p class="">Start Pool after create: ${this.req.noStart ? 'No' : 'Yes'}</p>
                 <p class="">Auto add new nodes: ${this.req.newNodes == '' ? '-' : this.req.newNodes}</p>
                 <p class="">Number of distribute groups: ${this.req.distributeGroupsIds.length}</p>`;
 
@@ -298,7 +298,7 @@
          getStorageUnitNode(storageUnit) {
              return storageUnit.node
          },
-         async createVolume() {
+         async createPool() {
              var req = {
                  name: this.req.name,
                  distribute_groups: [],
@@ -329,12 +329,12 @@
              }
 
              try {
-                 await this.mgr.pool(this.poolName).createVolume(req.name, req.distribute_groups, req)
-                 this.volumes.unshift(await this.mgr.pool(this.poolName).volume(req.name).get(true))
+                 await this.mgr.createPool(req.name, req.distribute_groups, req)
+                 this.pools.unshift(await this.mgr.pool(req.name).get(true))
                  this.req.name = "";
                  this.error = "";
-                 this.showCreateVolume = false;
-                 this.message = "Volume created successfully!";
+                 this.showCreatePool = false;
+                 this.message = "Pool created successfully!";
                  this.showCreateButton = true;
                  var obj = this
                  setTimeout(function() {
@@ -342,7 +342,7 @@
                  }, 5000);
              } catch (error) {
                  authErrorRedirectHandle(this.mgrUrl, error);
-                 this.error = `Failed to create the volume.<br/>${error}`
+                 this.error = `Failed to create the pool.<br/>${error}`
              }
          },
          getDistributeSize() {
@@ -361,12 +361,12 @@
                  return this.req.commonPath;
              }
 
-             return `/data/${this.req.name == '' ? 'VOL' : this.req.name}/s${idx}`;
+             return `/data/${this.req.name == '' ? 'POOL' : this.req.name}/s${idx}`;
          },
          async init() {
              const mgr = storageManagerFromCookies(this.mgrUrl);
              try {
-                 var nodes = await mgr.pool(this.poolName).listNodes();
+                 var nodes = await mgr.listNodes();
                  this.req.nodes = nodes.map((node) => node.name);
              } catch (error) {
                  authErrorRedirectHandle(this.mgrUrl, error)

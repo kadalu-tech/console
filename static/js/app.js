@@ -99,16 +99,16 @@ function humanize(value, bytes=false) {
     return value.toFixed(decimalPlaces) + ' ' + units[u];
 }
 
-function volumeStateHtml(volume) {
-    if (volume.state != "Started") {
-        return `<span class="has-text-gray">${volume.state}</span>`;
+function poolStateHtml(pool) {
+    if (pool.state != "Started") {
+        return `<span class="has-text-gray">${pool.state}</span>`;
     }
 
-    if (volume.metrics.health === "Up") {
-        return `<span class="has-text-success">${volume.state}, ${volume.metrics.health}</span>`;
+    if (pool.metrics.health === "Up") {
+        return `<span class="has-text-success">${pool.state}, ${pool.metrics.health}</span>`;
     }
 
-    return `<span class="has-text-danger">${volume.state}, ${volume.metrics.health}</span>`;
+    return `<span class="has-text-danger">${pool.state}, ${pool.metrics.health}</span>`;
 }
 
 function storageUnitStateHtml(storageUnit) {
@@ -127,66 +127,66 @@ function storageUnitNameAndStateHtml(storageUnit) {
     return `${storageUnit.node.name}:${storageUnit.port} &nbsp; <span class="has-text-danger">${storageUnit.metrics.health}</span>`;
 }
 
-function volumeType(volume) {
-    var repDisp = volume.distribute_groups[0].replica_count + volume.distribute_groups[0].disperse_count;
+function poolType(pool) {
+    var repDisp = pool.distribute_groups[0].replica_count + pool.distribute_groups[0].disperse_count;
 
     var pfx = "";
-    if (volume.distribute_groups.length > 1 &&  repDisp > 0) {
+    if (pool.distribute_groups.length > 1 &&  repDisp > 0) {
         pfx = "Distributed ";
     }
 
-    if(volume.distribute_groups[0].replica_count > 0) {
-        return pfx + (volume.distribute_groups[0].replica_keyword == "mirror" ? "Mirror" : "Replicate");
-    } else if (volume.distribute_groups[0].disperse_count > 0) {
+    if(pool.distribute_groups[0].replica_count > 0) {
+        return pfx + (pool.distribute_groups[0].replica_keyword == "mirror" ? "Mirror" : "Replicate");
+    } else if (pool.distribute_groups[0].disperse_count > 0) {
         return `${pfx}Disperse`;
     }
 
     return `${pfx}Distribute`;
 }
 
-function poolUtilization(volumes) {
+function poolUtilization(pools) {
     var used = 0;
     var total = 0;
 
-    for (var i=0; i<volumes.length; i++) {
-        used += volumes[i].metrics.size_used_bytes;
-        total += volumes[i].metrics.size_bytes;
+    for (var i=0; i<pools.length; i++) {
+        used += pools[i].metrics.size_used_bytes;
+        total += pools[i].metrics.size_bytes;
     }
 
     return `${humanize(used, true)}/${humanize(total, true)}`;
 }
 
-function poolSizePercentage(volumes) {
+function poolSizePercentage(pools) {
     var used = 0;
     var total = 0;
 
-    for (var i=0; i<volumes.length; i++) {
-        used += volumes[i].metrics.size_used_bytes;
-        total += volumes[i].metrics.size_bytes;
+    for (var i=0; i<pools.length; i++) {
+        used += pools[i].metrics.size_used_bytes;
+        total += pools[i].metrics.size_bytes;
     }
 
     return (used*100/total).toFixed(1);
 }
 
-function poolStorageUnitsCount(volumes) {
+function poolsStorageUnitsCount(pools) {
     var total = 0;
 
-    for (var i=0; i<volumes.length; i++) {
-        for (var j=0; j<volumes[i].distribute_groups.length; j++) {
-            total += volumes[i].distribute_groups[j].storage_units.length;
+    for (var i=0; i<pools.length; i++) {
+        for (var j=0; j<pools[i].distribute_groups.length; j++) {
+            total += pools[i].distribute_groups[j].storage_units.length;
         }
     }
 
     return total;
 }
 
-function poolNodesCount(volumes) {
+function poolsNodesCount(pools) {
     var nodes = [];
 
-    for (var i=0; i<volumes.length; i++) {
-        for (var j=0; j<volumes[i].distribute_groups.length; j++) {
-            for (var k=0; k<volumes[i].distribute_groups[j].storage_units.length; k++) {
-                var nodeName = volumes[i].distribute_groups[j].storage_units[k].node.name;
+    for (var i=0; i<pools.length; i++) {
+        for (var j=0; j<pools[i].distribute_groups.length; j++) {
+            for (var k=0; k<pools[i].distribute_groups[j].storage_units.length; k++) {
+                var nodeName = pools[i].distribute_groups[j].storage_units[k].node.name;
                 if (nodes.indexOf(nodeName) === -1) {
                     nodes.push(nodeName);
                 }
@@ -197,22 +197,22 @@ function poolNodesCount(volumes) {
     return nodes.length;
 }
 
-function volumeStorageUnitsCount(volume) {
+function poolStorageUnitsCount(pool) {
     var total = 0;
 
-    for (var j=0; j<volume.distribute_groups.length; j++) {
-        total += volume.distribute_groups[j].storage_units.length;
+    for (var j=0; j<pool.distribute_groups.length; j++) {
+        total += pool.distribute_groups[j].storage_units.length;
     }
 
     return total;
 }
 
-function volumeNodesCount(volume) {
+function poolNodesCount(pool) {
     var nodes = [];
 
-    for (var j=0; j<volume.distribute_groups.length; j++) {
-        for (var k=0; k<volume.distribute_groups[j].storage_units.length; k++) {
-            var nodeName = volume.distribute_groups[j].storage_units[k].node.name;
+    for (var j=0; j<pool.distribute_groups.length; j++) {
+        for (var k=0; k<pool.distribute_groups[j].storage_units.length; k++) {
+            var nodeName = pool.distribute_groups[j].storage_units[k].node.name;
             if (nodes.indexOf(nodeName) === -1) {
                 nodes.push(nodeName);
             }
@@ -241,16 +241,16 @@ function inodesPercentage(obj) {
     return (obj.metrics.inodes_used_count*100/obj.metrics.inodes_count).toFixed(1);
 }
 
-function volumeNameAndStatus(volume) {
-    if (volume.state != "Started") {
-        return `${volume.name} <span class="has-text-grey is-size-6 ml-4">${volume.state}</span>`;
+function poolNameAndStatus(pool) {
+    if (pool.state != "Started") {
+        return `${pool.name} <span class="has-text-grey is-size-6 ml-4">${pool.state}</span>`;
     }
 
-    if (volume.metrics.health === "Up") {
-        return `${volume.name} <span class="has-text-success is-size-6 ml-4">${volume.state}, ${volume.metrics.health}</span>`;
+    if (pool.metrics.health === "Up") {
+        return `${pool.name} <span class="has-text-success is-size-6 ml-4">${pool.state}, ${pool.metrics.health}</span>`;
     }
 
-    return `${volume.name} <span class="has-text-danger is-size-6 ml-4">${volume.state}, ${volume.metrics.health}</span>`;
+    return `${pool.name} <span class="has-text-danger is-size-6 ml-4">${pool.state}, ${pool.metrics.health}</span>`;
 }
 
 function nodeNameAndStatus(node) {
@@ -269,20 +269,20 @@ SVG_EDIT = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 
 
 SVG_ELLIPSIS = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 icon is-medium"><path fill-rule="evenodd" d="M4.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clip-rule="evenodd" /></svg>';
 
-function volumeStartButton(volume, idx) {
+function poolStartButton(pool, idx) {
     return `<div class="is-clickable is-size-6"><i class="has-text-success">${SVG_PLAY}</i> Start</div>`;
 }
 
-function volumeStopButton(volume, idx) {
-    if (volume.state == "Started") {
+function poolStopButton(pool, idx) {
+    if (pool.state == "Started") {
         return `<span class="is-clickable is-size-6"><i class="has-text-danger">${SVG_STOP}</i> Stop</span>`;
     } else {
         return `<span class="has-text-grey is-size-6"><i>${SVG_STOP}</i> Stop</span>`;
     }
 }
 
-function volumeDeleteButton(volume, idx) {
-    if (volume.state == "Started") {
+function poolDeleteButton(pool, idx) {
+    if (pool.state == "Started") {
         return `<span class=""><i class="has-text-grey">${SVG_DELETE}</i> Delete</span>`;
     } else {
         return `<span class="is-clickable"><i class="has-text-danger">${SVG_DELETE}</i> Delete</span>`;
@@ -335,10 +335,10 @@ function storageManagerFromCookies(mgrUrl) {
     return StorageManager.fromToken(mgrUrl, userId, apiKeyId, token);
 }
 
-function volumesUrl(mgrUrl, pool) {
-    return '/volumes?mgr=' + mgrUrl + '&pool=' + pool.name;
+function poolsUrl(mgrUrl) {
+    return '/pools?mgr=' + mgrUrl;
 }
 
-function nodesUrl(mgrUrl, pool) {
-    return '/nodes?mgr=' + mgrUrl + '&pool=' + pool.name;
+function nodesUrl(mgrUrl) {
+    return '/nodes?mgr=' + mgrUrl;
 }
